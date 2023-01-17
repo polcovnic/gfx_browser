@@ -29,5 +29,6 @@ fn main() {
     let mut parser = HtmlParser::new(&html_input);
     let nodes = parser.parse_nodes();
     pretty_print(&nodes[0], 0);
-    render(nodes);
+    let boxes = layout::build_layout_tree(&nodes[0]);
+    render(boxes);
 }
