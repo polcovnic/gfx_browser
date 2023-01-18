@@ -30,5 +30,6 @@ fn main() {
     let nodes = parser.parse_nodes();
     pretty_print(&nodes[0], 0);
     let boxes = layout::build_layout_tree(&nodes[0]);
+    println!("{:?}", boxes);
     render(boxes);
 }

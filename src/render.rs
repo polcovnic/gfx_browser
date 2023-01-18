@@ -41,8 +41,8 @@ fn transform_rectangle(rect: &Content) -> (f32, f32, f32, f32) {
 
 fn render_content(color: &Color, content: &Content) -> Vec<Vertex> {
     let (w, h, x, y) = transform_rectangle(&content);
-    println!("w: {}, h: {}, x: {}, y: {}", w, h, x, y);
-    println!("1: {}, {} \n2: {}, {} \n3: {}, {} \n4: {}, {}", x, y, x, y - h, x + w, y - h, x + w, y);
+    // println!("w: {}, h: {}, x: {}, y: {}", w, h, x, y);
+    // println!("1: {}, {} \n2: {}, {} \n3: {}, {} \n4: {}, {}", x, y, x, y - h, x + w, y - h, x + w, y);
     vec![Vertex { pos: [x, y], color: color.to_array() },
          Vertex { pos: [x, y - h], color: color.to_array() },
          Vertex { pos: [x + w, y - h], color: color.to_array() },
@@ -62,7 +62,6 @@ pub fn render(boxes: Vec<LayoutBox>) {
     let mut index_data = Vec::new();
     let mut rect_num: u16 = 0;
     for box_ in boxes {
-        println!("Some box");
         let mut v = render_content(&box_.color, &box_.content);
         vertices.append(&mut v);
         let index_base: u16 = rect_num * 4;

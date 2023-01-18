@@ -1,6 +1,8 @@
+use std::fmt;
 use crate::dom;
+use crate::dom::NodeType;
 
-// #[derive(Clone)]
+#[derive(Clone)]
 pub struct LayoutBox {
     pub content: Content,
     pub color: Color,
@@ -10,12 +12,23 @@ pub struct LayoutBox {
     pub box_type: BoxType,
     pub children: Option<Vec<LayoutBox>>,
 }
+impl fmt::Debug for LayoutBox {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}: {{", self.name)?;
+        for child in self.children.as_ref().unwrap_or(&vec![]).iter() {
+            write!(f, "{:?}", child)?;
+        }
+        write!(f, "}}")
+    }
+}
+
 #[derive(Clone)]
 pub enum BoxType {
     BlockBox,
     InlineBox,
     BlockInlineBox,
 }
+
 #[derive(Clone)]
 pub struct Content {
     pub height: i16,
@@ -24,26 +37,29 @@ pub struct Content {
     pub y: i16,
     pub text: Option<String>,
 }
+
 #[derive(Clone)]
 pub struct Margin {
-   pub top: i16,
-   pub right: i16,
-   pub bottom: i16,
-   pub left: i16,
+    pub top: i16,
+    pub right: i16,
+    pub bottom: i16,
+    pub left: i16,
 }
+
 #[derive(Clone)]
 pub struct Padding {
-   pub top: i16,
-   pub right: i16,
-   pub bottom: i16,
-   pub left: i16,
+    pub top: i16,
+    pub right: i16,
+    pub bottom: i16,
+    pub left: i16,
 }
+
 #[derive(Clone)]
 pub struct Color {
-   pub r: u8,
-   pub g: u8,
-   pub b: u8,
-   pub a: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
 }
 
 impl Color {
@@ -53,7 +69,7 @@ impl Color {
 }
 
 impl Default for LayoutBox {
-    fn default () -> LayoutBox {
+    fn default() -> LayoutBox {
         LayoutBox {
             content: Content::default(),
             color: Color::default(),
@@ -61,7 +77,7 @@ impl Default for LayoutBox {
             name: String::from("default"),
             box_type: BoxType::BlockBox,
             padding: Padding::default(),
-            children: None
+            children: None,
         }
     }
 }
@@ -73,7 +89,7 @@ impl Default for Content {
             y: 200,
             width: 300,
             height: 300,
-            text: None
+            text: None,
         }
     }
 }
@@ -116,9 +132,13 @@ pub fn build_layout_tree<'a>(node: &'a dom::Node) -> Vec<LayoutBox> {
     root.box_type = BoxType::BlockBox;
     root.color = Color::default();
     root.margin = Margin::default();
-    root.name = String::from("root");
+    root.name = if let NodeType::Element(element_data) = &node.node_type {
+        element_data.tag_name.clone()
+    } else {
+        String::from("root")
+    };
     root.padding = Padding::default();
-    root.children = build_layout_tree_helper(&vec![node.clone()], &mut root, 0);
+    root.children = build_layout_tree_helper(&node.children, &mut root, 0);
     vec![root]
 }
 
@@ -129,12 +149,11 @@ pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, 
             dom::NodeType::Element(element) => {
                 let mut box_ = LayoutBox::default();
                 box_.box_type = BoxType::BlockBox;
-                box_.content.x = 0;
-                box_.content.y = 0;
+                box_.content.x = 100 * count;
+                box_.content.y = 100 * count;
                 box_.name = element.tag_name.clone();
-                println!("{}", count);
                 box_.children = build_layout_tree_helper(&node.children, &mut box_, count + 1);
-                // boxes.push(box_.clone());
+                boxes.push(box_.clone());
                 if let Some(children) = &mut parent.children {
                     children.push(box_);
                 }
