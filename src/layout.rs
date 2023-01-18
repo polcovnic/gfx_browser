@@ -10,12 +10,12 @@ pub struct LayoutBox {
     pub margin: Margin,
     pub padding: Padding,
     pub box_type: BoxType,
-    pub children: Option<Vec<LayoutBox>>,
+    pub children: Vec<LayoutBox>,
 }
 impl fmt::Debug for LayoutBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}: {{", self.name)?;
-        for child in self.children.as_ref().unwrap_or(&vec![]).iter() {
+        for child in &self.children {
             write!(f, "{:?}", child)?;
         }
         write!(f, "}}")
@@ -77,7 +77,7 @@ impl Default for LayoutBox {
             name: String::from("default"),
             box_type: BoxType::BlockBox,
             padding: Padding::default(),
-            children: None,
+            children: vec![],
         }
     }
 }
@@ -142,7 +142,7 @@ pub fn build_layout_tree<'a>(node: &'a dom::Node) -> Vec<LayoutBox> {
     vec![root]
 }
 
-pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, count: i16) -> Option<Vec<LayoutBox>> {
+pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, count: i16) -> Vec<LayoutBox> {
     let mut boxes = Vec::new();
     for node in nodes {
         match &node.node_type {
@@ -154,9 +154,6 @@ pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, 
                 box_.name = element.tag_name.clone();
                 box_.children = build_layout_tree_helper(&node.children, &mut box_, count + 1);
                 boxes.push(box_.clone());
-                if let Some(children) = &mut parent.children {
-                    children.push(box_);
-                }
             }
             dom::NodeType::Text(text) => {
                 let mut box_ = LayoutBox::default();
@@ -168,15 +165,12 @@ pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, 
                 box_.color = Color::default();
                 box_.margin = Margin::default();
                 box_.padding = Padding::default();
-                box_.children = None;
+                box_.children = vec![];
                 boxes.push(box_);
             }
             _ => {}
         }
     }
-    if boxes.is_empty() {
-        None
-    } else {
-        Some(boxes)
-    }
+    boxes
+
 }

@@ -50,8 +50,8 @@ fn render_content(color: &Color, content: &Content) -> Vec<Vertex> {
 }
 
 pub fn render_rec(box_: &LayoutBox) {
-    if let Some(children) = &box_.children {
-        for child in children {
+    if box_.children.len() != 0 {
+        for child in &box_.children {
             render_rec(child);
         }
     }
