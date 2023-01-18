@@ -57,14 +57,28 @@ pub fn render_rec(box_: &LayoutBox) {
     }
 }
 
+fn box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
+    let mut boxes_out = Vec::new();
+    for node in boxes_tree {
+        boxes_out.push(node.clone());
+        boxes_out.append(&mut box_tree_to_vector(node.children));
+    }
+    boxes_out
+}
+fn layout_box_tree_to_vector(boxes_tree: LayoutBox) -> Vec<LayoutBox> {
+    let mut boxes = Vec::new();
+    boxes.push(boxes_tree.clone());
+    boxes.append(&mut box_tree_to_vector(boxes_tree.children));
+    boxes
+}
 pub fn render(boxes: Vec<LayoutBox>) {
+    let boxes = layout_box_tree_to_vector(boxes[0].clone());
     let mut vertices = Vec::new();
     let mut index_data = Vec::new();
-    let mut rect_num: u16 = 0;
-    for box_ in boxes {
+    for (rect_num, box_) in boxes.iter().enumerate() {
         let mut v = render_content(&box_.color, &box_.content);
         vertices.append(&mut v);
-        let index_base: u16 = rect_num * 4;
+        let index_base: u16 = rect_num as u16 * 4;
         index_data.append(&mut vec![
             index_base,
             index_base + 1,
@@ -73,9 +87,7 @@ pub fn render(boxes: Vec<LayoutBox>) {
             index_base + 3,
             index_base,
         ]);
-        rect_num += 1;
     }
-
 
     let builder = glutin::WindowBuilder::new()
         .with_title("My First Triangle".to_string())
