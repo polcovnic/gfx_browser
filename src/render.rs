@@ -4,8 +4,8 @@ use gfx::traits::FactoryExt;
 use glutin::GlContext;
 
 use crate::layout;
-use crate::dom;
-use crate::dom::NodeType;
+use crate::html;
+use crate::html::NodeType;
 use crate::layout::{Color, Content, LayoutBox};
 
 pub type ColorFormat = gfx::format::Rgba8;

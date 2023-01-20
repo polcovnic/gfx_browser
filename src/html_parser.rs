@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use crate::dom::{AttrMap, ElementData, Node, NodeType};
+use crate::html::{AttrMap, ElementData, Node, NodeType};
 
 use std::iter::Peekable;
 use std::str::Chars;
-use crate::dom;
+use crate::html;
 
 
 pub struct HtmlParser<'a> {

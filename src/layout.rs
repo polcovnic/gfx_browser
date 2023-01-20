@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::dom;
-use crate::dom::NodeType;
+use crate::html;
+use crate::html::NodeType;
 
 #[derive(Clone)]
 pub struct LayoutBox {
@@ -127,7 +127,7 @@ impl Default for Padding {
     }
 }
 
-pub fn build_layout_tree<'a>(node: &'a dom::Node) -> Vec<LayoutBox> {
+pub fn build_layout_tree<'a>(node: &'a html::Node) -> Vec<LayoutBox> {
     let mut root = LayoutBox::default();
     root.box_type = BoxType::BlockBox;
     root.color = Color::default();
@@ -142,11 +142,11 @@ pub fn build_layout_tree<'a>(node: &'a dom::Node) -> Vec<LayoutBox> {
     vec![root]
 }
 
-pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, count: i16) -> Vec<LayoutBox> {
+pub fn build_layout_tree_helper(nodes: &Vec<html::Node>, parent: &mut LayoutBox, count: i16) -> Vec<LayoutBox> {
     let mut boxes = Vec::new();
     for node in nodes {
         match &node.node_type {
-            dom::NodeType::Element(element) => {
+            html::NodeType::Element(element) => {
                 let mut box_ = LayoutBox::default();
                 box_.box_type = BoxType::BlockBox;
                 box_.content.x = 100 * count;
@@ -155,7 +155,7 @@ pub fn build_layout_tree_helper(nodes: &Vec<dom::Node>, parent: &mut LayoutBox, 
                 box_.children = build_layout_tree_helper(&node.children, &mut box_, count + 1);
                 boxes.push(box_.clone());
             }
-            dom::NodeType::Text(text) => {
+            html::NodeType::Text(text) => {
                 let mut box_ = LayoutBox::default();
                 box_.box_type = BoxType::InlineBox;
                 box_.content.x = 0;
