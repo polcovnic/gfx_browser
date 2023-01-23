@@ -3,12 +3,12 @@ use std::default::Default;
 use std::fmt::{Debug, Formatter};
 use std::iter::Map;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Stylesheet {
     pub rules: Vec<Rule>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rule {
     pub selector: Selector,
     pub properties: Vec<Property>,
@@ -76,7 +76,7 @@ impl Default for Color {
 }
 
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Selector {
     pub tag_name: Option<String>,
     pub id: Option<String>,

@@ -16,6 +16,7 @@ mod layout;
 mod render;
 mod css_parser;
 mod css;
+mod styled_html;
 
 use render::render;
 use css_parser::CssParser;
