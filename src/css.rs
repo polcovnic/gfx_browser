@@ -1,5 +1,6 @@
 use std::fmt;
 use std::default::Default;
+use std::fmt::{Debug, Formatter};
 use std::iter::Map;
 
 #[derive(Debug)]
@@ -32,7 +33,7 @@ impl Default for Property {
     fn default() -> Self {
         Property {
             name: PropertyName::Color,
-            value: PropertyValue::Color(Color::default()),
+            value: PropertyValue::Other("".to_string()),
         }
     }
 }
@@ -48,21 +49,32 @@ pub enum PropertyName {
 #[derive(PartialEq, Debug)]
 pub enum PropertyValue {
     Color(Color),
-    Length(u16, Unit),
+    Length(Length),
     Other(String),
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub enum Color {
     Rgb(u8, u8, u8),
     Named(String),
-    Hex(String),
+    Hex(u32),
+}
+
+impl Debug for Color {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Color::Rgb(r, g, b) => write!(f, "rgb({}, {}, {})", r, g, b),
+            Color::Named(name) => write!(f, "{}", name),
+            Color::Hex(hex) => write!(f, "#{:06x}", hex),
+        }
+    }
 }
 impl Default for Color {
     fn default() -> Self {
         Color::Rgb(0, 0, 0)
     }
 }
+
 
 #[derive(PartialEq, Debug)]
 pub struct Selector {
@@ -92,11 +104,10 @@ impl Default for Selector {
 }
 
 #[derive(PartialEq, Debug, Eq)]
-pub enum Unit {
-    Em,
-    Ex,
-    Vh,
-    Px,
+pub enum Length {
+    Em(u16),
+    Vh(u16),
+    Px(u16),
 }
 
 impl Default for Stylesheet {

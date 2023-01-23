@@ -23,7 +23,7 @@ use crate::css::Stylesheet;
 
 
 fn main() {
-    let mut path = env::current_dir().unwrap();
+    // let mut path = env::current_dir().unwrap();
     // path.push("index.html");
     // let mut file_reader = match File::open(&path) {
     //     Ok(f) => BufReader::new(f),
@@ -38,15 +38,25 @@ fn main() {
     // println!("{:?}", boxes);
     // render(boxes);
 
-    path.push("style.css");
-    let mut file_reader = match File::open(&path) {
-        Ok(f) => BufReader::new(f),
-        Err(e) => panic!("file: {}, error: {}", path.display(), e),
-    };
-    let mut css_input = String::new();
-    file_reader.read_to_string(&mut css_input).unwrap();
-    let mut parser = CssParser::new(&css_input);
-    let stylesheet = parser.parse_stylesheet();
-    println!("{:?}", stylesheet);
-
+    // path.push("style.css");
+    // let mut file_reader = match File::open(&path) {
+    //     Ok(f) => BufReader::new(f),
+    //     Err(e) => panic!("file: {}, error: {}", path.display(), e),
+    // };
+    // let mut css_input = String::new();
+    // file_reader.read_to_string(&mut css_input).unwrap();
+    // let mut parser = CssParser::new(&css_input);
+    // let stylesheet = parser.parse_stylesheet();
+    // for rule in stylesheet.rules {
+    //     println!("{:?}", rule.selector);
+    //     for property in rule.properties {
+    //         println!("{:?}", property);
+    //     }
+    //     println!();
+    // }
+    // let mut chars = "asdfgd".chars().peekable();
+    // println!("{:?}", chars.peek().map_or(false, |c| *c == 'a'));
+    // if chars.peek().map_or(false, |c| *c == 'a') {
+    //     println!("a");
+    // }
 }
