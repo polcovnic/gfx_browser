@@ -63,7 +63,7 @@ impl<'a> CssParser<'a> {
             self.chars.next();
             selector_type = 2;
         }
-        while self.chars.peek().map_or(false, |c| *c != ' ' && *c != '{' ) {
+        while self.chars.peek().map_or(false, |c| *c != ' ' && *c != '{') {
             name.push(self.chars.next().unwrap());
         }
         match selector_type {
@@ -97,25 +97,97 @@ impl<'a> CssParser<'a> {
         match name.as_str() {
             "color" => (PropertyName::Color, PropertyValue::Color(CssParser::parse_color(value))),
             "margin" => (PropertyName::Margin, PropertyValue::Length(CssParser::parse_length(value))),
+            "padding" => (PropertyName::Padding, PropertyValue::Length(CssParser::parse_length(value))),
+            "width" => (PropertyName::Width, PropertyValue::Length(CssParser::parse_length(value))),
+            "height" => (PropertyName::Height, PropertyValue::Length(CssParser::parse_length(value))),
+            "background-color" => (PropertyName::BackgroundColor, PropertyValue::Color(CssParser::parse_color(value))),
+            "display" => (PropertyName::Display, PropertyValue::Display(CssParser::parse_display(value))),
+            "border" => (PropertyName::Border, PropertyValue::Border(CssParser::parse_border(value))),
+            "border-width" => {
+                let border = Border {
+                    width: CssParser::parse_length(value),
+                    ..Default::default()
+                };
+                (PropertyName::BorderWidth, PropertyValue::Border(border))
+            },
+            "border-style" => {
+                let border = Border {
+                    style: CssParser::parse_border_style(value),
+                    ..Default::default()
+                };
+                (PropertyName::BorderStyle, PropertyValue::Border(border))
+            },
+            "border-color" => (PropertyName::BorderColor, PropertyValue::Color(CssParser::parse_color(value))),
             _ => (PropertyName::Other, PropertyValue::Other(value)),
+        }
+    }
+
+    fn parse_border(value: String) -> Border {
+        let mut border = Border::default();
+        let mut border_parts = value.split_whitespace();
+        let border_width = border_parts.next().unwrap();
+        let border_style = border_parts.next().unwrap();
+        let border_color = border_parts.next().unwrap();
+        border.width = CssParser::parse_length(border_width.to_string());
+        border.style = CssParser::parse_border_style(border_style.to_string());
+        border.color = CssParser::parse_color(border_color.to_string());
+        border
+    }
+
+    fn parse_border_style(value: String) -> BorderStyle {
+        match value.as_str() {
+            "solid" => BorderStyle::Solid,
+            "dotted" => BorderStyle::Dotted,
+            "dashed" => BorderStyle::Dashed,
+            "double" => BorderStyle::Double,
+            "groove" => BorderStyle::Groove,
+            "ridge" => BorderStyle::Ridge,
+            "inset" => BorderStyle::Inset,
+            "outset" => BorderStyle::Outset,
+            "none" => BorderStyle::None,
+            "hidden" => BorderStyle::Hidden,
+            _ => BorderStyle::None,
+        }
+    }
+
+    fn parse_display(value: String) -> DisplayType {
+        match value.as_str() {
+            "block" => DisplayType::Block,
+            "inline" => DisplayType::Inline,
+            "none" => DisplayType::None,
+            _ => DisplayType::None,
         }
     }
 
     fn parse_color(value: String) -> Color {
         match value {
             color if color.starts_with('#') => Color::Hex(u32::from_str_radix(&color[1..], 16).unwrap()),
-            color if color.starts_with("rgb") => {Color::Rgb(0, 0, 0)}, //todo
+            color if color.starts_with("rgb") => { Color::Rgb(0, 0, 0) } //todo
             color => Color::Named(color),
         }
     }
 
     fn parse_length(value: String) -> Length {
-        let mut value = value;
+        //todo question
+        if value.ends_with("%") {
+            let value = value[..value.len() - 1].parse::<u16>().unwrap();
+            if value > 100 {
+                panic!("Percentage value should be less than 100");
+            }
+            return Length::Percent(value as u8);
+        }
         let unit = &value[value.len() - 2..];
         let value = value[..value.len() - 2].parse::<u16>().unwrap();
         match unit {
             "px" => Length::Px(value),
+            "%" => {
+                if value > 100 {
+                    panic!("Percentage value should be less than 100");
+                }
+                Length::Percent(value as u8)
+            }
             "em" => Length::Em(value),
+            "vh" => Length::Vh(value),
             _ => Length::Px(value),
         }
     }
@@ -127,9 +199,11 @@ impl<'a> CssParser<'a> {
     fn parse_identifier(&mut self) -> String {
         let mut ident = String::new();
 
-        if let Some(&c) = self.chars.peek() { if is_valid_start_ident(c) {
-            ident.push_str(&self.consume_while(is_valid_ident))
-        } }
+        if let Some(&c) = self.chars.peek() {
+            if is_valid_start_ident(c) {
+                ident.push_str(&self.consume_while(is_valid_ident))
+            }
+        }
 
         ident.to_lowercase()
     }
@@ -226,6 +300,7 @@ fn test_parse_rule() {
     assert_eq!(rule.properties[1].name, PropertyName::Margin);
     assert_eq!(rule.properties[1].value, PropertyValue::Length(Length::Px(10)));
 }
+
 #[test]
 fn test_parse_selector() {
     // test tag name
@@ -269,12 +344,64 @@ fn test_process_property_members_color() {
 
 #[test]
 fn test_process_property_members_margin() {
-   let margin_key = String::from("margin");
+    let margin_key = String::from("margin");
     let margin_value = String::from("10px");
     let (name, value) =
         CssParser::process_property_members(margin_key, margin_value);
     assert_eq!(name, PropertyName::Margin);
     assert_eq!(value, PropertyValue::Length(Length::Px(10)));
+}
+
+#[test]
+fn test_process_property_members_background_color() {
+    let background_color_key = String::from("background-color");
+    let background_color_value = String::from("red");
+    let (name, value) = CssParser::process_property_members(
+        background_color_key,
+        background_color_value,
+    );
+    assert_eq!(name, PropertyName::BackgroundColor);
+    assert_eq!(
+        value,
+        PropertyValue::Color(Color::Named("red".to_string()))
+    );
+}
+
+#[test]
+fn test_process_property_members_border() {
+    let border_key = String::from("border");
+    let border_value = String::from("1px solid red");
+    let (name, value) =
+        CssParser::process_property_members(border_key, border_value);
+    assert_eq!(name, PropertyName::Border);
+    assert_eq!(
+        value,
+        PropertyValue::Border(Border {
+            width: Length::Px(1),
+            style: BorderStyle::Solid,
+            color: Color::Named("red".to_string()),
+        })
+    );
+    let border_key = String::from("border-width");
+    let border_value = String::from("1px");
+    let (name, value) =
+        CssParser::process_property_members(border_key, border_value);
+    assert_eq!(name, PropertyName::BorderWidth);
+    assert_eq!(value, PropertyValue::Border(Border {
+        width: Length::Px(1),
+        style: BorderStyle::default(),
+        color: Color::default(),
+    }));
+    let border_key = String::from("border-style");
+    let border_value = String::from("solid");
+    let (name, value) =
+        CssParser::process_property_members(border_key, border_value);
+    assert_eq!(name, PropertyName::BorderStyle);
+    assert_eq!(value, PropertyValue::Border(Border {
+        color: Color::default(),
+        width: Length::default(),
+        style: BorderStyle::Solid,
+    }));
 }
 
 #[test]
@@ -289,4 +416,24 @@ fn test_parse_color() {
     assert_eq!(color, Color::Hex(0xff0000));
     // test rgb color
     //todo
+}
+
+#[test]
+fn test_parse_length() {
+    // test px
+    let value = String::from("10px");
+    let length = CssParser::parse_length(value);
+    assert_eq!(length, Length::Px(10));
+    // test %
+    let value = String::from("10%");
+    let length = CssParser::parse_length(value);
+    assert_eq!(length, Length::Percent(10));
+    // test em
+    let value = String::from("10em");
+    let length = CssParser::parse_length(value);
+    assert_eq!(length, Length::Em(10));
+    // test vh
+    let value = String::from("10vh");
+    let length = CssParser::parse_length(value);
+    assert_eq!(length, Length::Vh(10));
 }

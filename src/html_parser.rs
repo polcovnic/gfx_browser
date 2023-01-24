@@ -1,9 +1,7 @@
-use std::collections::HashMap;
 use crate::html::{AttrMap, ElementData, Node, NodeType};
 
 use std::iter::Peekable;
 use std::str::Chars;
-use crate::html;
 
 
 pub struct HtmlParser<'a> {
@@ -44,16 +42,15 @@ impl<'a> HtmlParser<'a> {
                     let mut node = self.parse_node();
                     let insert_index = nodes.len();
 
-                    match node.node_type {
-                        NodeType::Element(ref e) => if self.node_q.len() > 0 {
+                    if let NodeType::Element(ref e) = node.node_type {
+                        if self.node_q.len() > 0 {
                             let assumed_tag = self.node_q.remove(0);
 
                             if e.tag_name != assumed_tag {
                                 nodes.append(&mut node.children);
                                 self.node_q.insert(0, assumed_tag);
                             }
-                        },
-                        _ => {}
+                        }
                     }
 
                     nodes.insert(insert_index, node);
@@ -268,4 +265,70 @@ fn is_valid_attr_value(c: char) -> bool {
         ' ' | '"' | '\'' | '=' | '<' | '>' | '`' => false,
         _ => true,
     }
+}
+
+
+#[test]
+fn test_parse_node() {
+    let mut parser = HtmlParser::new("div class=\"testc\" id=\"testi\">");
+    let node = parser.parse_node();
+    let element_data = NodeType::Element(ElementData {
+        tag_name: String::from("div"),
+        attributes: {
+            let mut m = AttrMap::new();
+            m.insert(String::from("class"), String::from("testc"));
+            m.insert(String::from("id"), String::from("testi"));
+            m
+        },
+    });
+    assert_eq!(node.node_type, element_data);
+    if let NodeType::Element(data) = node.node_type {
+        assert_eq!(data.tag_name, "div");
+        assert_eq!(data.attributes.get("class").unwrap(), "testc");
+        assert_eq!(data.attributes.get("id").unwrap(), "testi");
+    }
+}
+
+#[test]
+fn test_parse_nodes() {
+    let mut parser = HtmlParser::new("<div class=\"testc\" id=\"testi\">");
+    let nodes = parser.parse_nodes();
+    assert_eq!(nodes.len(), 1);
+    if let NodeType::Element(data) = &nodes[0].node_type {
+        assert_eq!(data.tag_name, "div");
+        assert_eq!(data.attributes.get("class").unwrap(), "testc");
+        assert_eq!(data.attributes.get("id").unwrap(), "testi");
+    }
+}
+
+#[test]
+fn test_parse_text_node() {
+    let mut parser = HtmlParser::new("test");
+    let node = parser.parse_text_node();
+    assert_eq!(node.node_type, NodeType::Text(String::from("test")));
+    let mut parser = HtmlParser::new("test<");
+    let node = parser.parse_text_node();
+    assert_eq!(node.node_type, NodeType::Text(String::from("test")));
+}
+
+#[test]
+fn test_parse_comment_node() {
+    let mut parser = HtmlParser::new("--test-->");
+    let node = parser.parse_comment_node();
+    assert_eq!(node.node_type, NodeType::Comment(String::from("test")));
+}
+
+#[test]
+fn test_parse_attributes() {
+    let mut parser = HtmlParser::new("class=\"testc\" id=\"testi\">");
+    let attributes = parser.parse_attributes();
+    assert_eq!(attributes.get("class").unwrap(), "testc");
+    assert_eq!(attributes.get("id").unwrap(), "testi");
+}
+
+#[test]
+fn test_parse_attr_value() {
+    let mut parser = HtmlParser::new("\"testc\" id=\"testi\">");
+    let value = parser.parse_attr_value();
+    assert_eq!(value, "testc");
 }

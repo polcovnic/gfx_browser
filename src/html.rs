@@ -18,7 +18,7 @@ pub enum NodeType {
 #[derive(PartialEq, Eq, Clone)]
 pub struct ElementData {
     pub tag_name: String,
-    attributes: AttrMap,
+    pub attributes: AttrMap,
 }
 
 impl ElementData {
@@ -96,8 +96,5 @@ pub fn pretty_print(n: &Node, indent_size: usize) {
         pretty_print(&child, indent_size + 2);
     }
 
-    match n.node_type {
-        NodeType::Element(ref e) => println!("{}</{}>", indent, e.tag_name),
-        _ => {}
-    }
+    if let NodeType::Element(ref e) = n.node_type { println!("{}</{}>", indent, e.tag_name) }
 }

@@ -3,12 +3,12 @@ use std::default::Default;
 use std::fmt::{Debug, Formatter};
 use std::iter::Map;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default)]
 pub struct Stylesheet {
     pub rules: Vec<Rule>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default)]
 pub struct Rule {
     pub selector: Selector,
     pub properties: Vec<Property>,
@@ -23,34 +23,95 @@ impl Rule {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Default)]
 pub struct Property {
     pub name: PropertyName,
     pub value: PropertyValue,
 }
 
-impl Default for Property {
+
+#[derive(PartialEq, Debug, Default)]
+pub enum PropertyName {
+    #[default]
+    Color,
+    BackgroundColor,
+    BackgroundImage,
+    Width,
+    Height,
+    Margin,
+    Padding,
+    Display,
+    Border,
+    BorderColor,
+    BorderWidth,
+    BorderStyle,
+    FontSize,
+    FontFamily,
+    FontWeight,
+    Other,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Border {
+    pub color: Color,
+    pub width: Length,
+    pub style: BorderStyle,
+}
+
+impl Border {
+    pub fn with_width(&mut self, width: Length) -> &mut Self {
+        self.width = width;
+        self
+    }
+}
+
+impl Default for Border {
     fn default() -> Self {
-        Property {
-            name: PropertyName::Color,
-            value: PropertyValue::Other("".to_string()),
+        Border {
+            color: Color::default(),
+            width: Length::default(),
+            style: BorderStyle::default(),
         }
     }
 }
 
-#[derive(PartialEq, Debug)]
-pub enum PropertyName {
-    Color,
-    Margin,
-    Padding,
-    Other,
+#[derive(PartialEq, Debug, Default)]
+pub enum BorderStyle {
+    #[default]
+    Solid,
+    Dotted,
+    Dashed,
+    Double,
+    Groove,
+    Ridge,
+    Inset,
+    Outset,
+    None,
+    Hidden,
+}
+
+#[derive(PartialEq, Debug, Default)]
+pub enum DisplayType {
+    #[default]
+    Block,
+    Inline,
+    InlineBlock,
+    None,
 }
 
 #[derive(PartialEq, Debug)]
 pub enum PropertyValue {
     Color(Color),
     Length(Length),
+    Border(Border),
+    Display(DisplayType),
     Other(String),
+}
+
+impl Default for PropertyValue {
+    fn default() -> Self {
+        PropertyValue::Other("".to_string())
+    }
 }
 
 #[derive(PartialEq)]
@@ -59,6 +120,15 @@ pub enum Color {
     Named(String),
     Hex(u32),
 }
+
+impl Default for Color {
+    fn default() -> Self {
+        Color::Hex(0x000)
+    }
+}
+
+
+
 
 impl Debug for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -69,14 +139,11 @@ impl Debug for Color {
         }
     }
 }
-impl Default for Color {
-    fn default() -> Self {
-        Color::Rgb(0, 0, 0)
-    }
-}
 
 
-#[derive(PartialEq, Debug, Clone)]
+
+
+#[derive(PartialEq, Debug, Default)]
 pub struct Selector {
     pub tag_name: Option<String>,
     pub id: Option<String>,
@@ -93,36 +160,21 @@ impl Selector {
     }
 }
 
-impl Default for Selector {
-    fn default() -> Self {
-        Selector {
-            tag_name: None,
-            id: None,
-            class: None,
-        }
-    }
-}
 
 #[derive(PartialEq, Debug, Eq)]
 pub enum Length {
+    Px(u16),
+    Percent(u8),
     Em(u16),
     Vh(u16),
-    Px(u16),
 }
 
-impl Default for Stylesheet {
-    fn default() -> Stylesheet {
-        Stylesheet { rules: Vec::new() }
+impl Default for Length {
+    fn default() -> Self {
+        Length::Px(0)
     }
 }
 
-impl Default for Rule {
-    fn default() -> Rule {
-        Rule {
-            selector: Selector::default(),
-            properties: Vec::new(),
-        }
-    }
-}
+
 
 
