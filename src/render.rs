@@ -1,7 +1,11 @@
+use std::thread::sleep;
+use std::time::Duration;
 use gfx;
+use gfx_text;
 use gfx::Device;
 use gfx::traits::FactoryExt;
 use glutin::GlContext;
+use gfx::Factory;
 
 use crate::layout;
 use crate::html;
@@ -65,12 +69,14 @@ fn box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
     }
     boxes_out
 }
+
 fn layout_box_tree_to_vector(boxes_tree: LayoutBox) -> Vec<LayoutBox> {
     let mut boxes = Vec::new();
     boxes.push(boxes_tree.clone());
     boxes.append(&mut box_tree_to_vector(boxes_tree.children));
     boxes
 }
+
 pub fn render(boxes: Vec<LayoutBox>) {
     let boxes = layout_box_tree_to_vector(boxes[0].clone());
     let mut vertices = Vec::new();
@@ -90,13 +96,12 @@ pub fn render(boxes: Vec<LayoutBox>) {
     }
 
     let builder = glutin::WindowBuilder::new()
-        .with_title("My First Triangle".to_string())
-        .with_dimensions(WIDTH, HEIGHT);
+        .with_title(String::from("Browser"))
+        .with_dimensions(WIDTH, HEIGHT)
+        .with_vsync();
 
-    let gl_builder = glutin::ContextBuilder::new().with_vsync(true);
-    let mut events_loop = glutin::EventsLoop::new();
     let (window, mut device, mut factory, main_color, _main_depth) =
-        gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder, gl_builder, &events_loop);
+        gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 
     let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
     let pso = factory
@@ -113,38 +118,31 @@ pub fn render(boxes: Vec<LayoutBox>) {
         vbuf: vertex_buffer,
         out: main_color,
     };
-// let mut text = gfx_text::new(factory).build().unwrap();
+    let mut text = gfx_text::new(factory).build().unwrap();
 
-// text.add(
-//     "The quick brown fox jumps over the lazy dog",
-//     [10, 10],
-//     [0.65, 0.16, 0.16, 1.0],
-// );
 
 
     let mut running = true;
     while running {
 // fetch events
-        events_loop.poll_events(|event| {
-            if let glutin::Event::WindowEvent { event, .. } = event {
-                match event {
-                    glutin::WindowEvent::Closed => running = false,
-                    glutin::WindowEvent::KeyboardInput {
-                        input:
-                        glutin::KeyboardInput {
-                            virtual_keycode: Some(glutin::VirtualKeyCode::Escape),
-                            ..
-                        },
-                        ..
-                    } => return,
-                    _ => (),
-                }
+        for event in window.poll_events() {
+            match event {
+                glutin::Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
+                glutin::Event::Closed => running = false,
+                _ => {}
             }
-        });
+        }
 
         encoder.clear(&data.out, CLEAR_COLOR);
         encoder.draw(&slice, &pso, &data);
-// text.draw(&mut encoder, &data.out);
+
+        text.add(
+            "The quick brown fox jumps over the lazy dog",
+            [100, 100],
+            [0.65, 0.16, 0.16, 1.0],
+        );
+        text.draw(&mut encoder, &data.out).unwrap();
+        sleep(Duration::from_millis(1000));
         encoder.flush(&mut device);
         window.swap_buffers().unwrap();
         device.cleanup();

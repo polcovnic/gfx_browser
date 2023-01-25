@@ -22,6 +22,7 @@ impl fmt::Debug for LayoutBox {
     }
 }
 
+
 #[derive(Clone)]
 pub enum BoxType {
     BlockBox,
