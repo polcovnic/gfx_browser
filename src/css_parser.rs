@@ -24,13 +24,25 @@ impl<'a> CssParser<'a> {
             let rule = self.parse_rule();
             stylesheet.rules.push(rule);
         }
-
+        let last = &stylesheet.rules[stylesheet.rules.len() - 1];
+        let default = &Rule::default();
+        let result = last == default;
+        if result {
+            stylesheet.rules.pop();
+        }
         stylesheet
     }
 
     fn parse_rule(&mut self) -> Rule {
         let mut rule = Rule::default();
         let mut properties = Vec::new();
+
+        self.consume_while(is_space);
+        self.consume_while(is_not_valid_selector);
+
+        if self.chars.peek().is_none() {
+            return rule;
+        }
 
         rule.selector = self.parse_selector();
 
@@ -53,6 +65,7 @@ impl<'a> CssParser<'a> {
 
     fn parse_selector(&mut self) -> Selector {
         self.consume_while(is_space);
+        self.consume_while(is_not_valid_selector);
         let mut selector = Selector::default();
         let mut name = String::new();
         let mut selector_type: u8 = 0; // 0 - tag, 1 - class. 2 - id
@@ -246,6 +259,10 @@ fn is_not_property_identifier(c: char) -> bool {
     !is_letter(c)
 }
 
+fn is_not_property_identifier_or_closing_bracket(c: char) -> bool {
+    is_not_property_identifier(c) && !is_closing_bracket(c)
+}
+
 fn is_space(c: char) -> bool {
     c == ' '
 }
@@ -262,25 +279,78 @@ fn is_non_ascii(c: char) -> bool {
     c >= '\u{0080}'
 }
 
+fn is_not_valid_selector(c: char) -> bool {
+    !is_letter(c) && c != '.' && c != '#'
+}
+
+// for test
+fn assert_stylesheet(stylesheet: &Stylesheet) {
+    // todo ask
+    assert_eq!(stylesheet.rules.len(), 3);
+    // body
+    //selector
+    assert_eq!(stylesheet.rules[0].selector.tag_name, Some("body".to_string()));
+    assert_eq!(stylesheet.rules[0].selector.id, None);
+    assert_eq!(stylesheet.rules[0].selector.class, None);
+    //properties
+    assert_eq!(stylesheet.rules[0].properties[0].name, PropertyName::Color);
+    assert_eq!(stylesheet.rules[0].properties[0].value, PropertyValue::Color(Color::Hex(0x772233)));
+    assert_eq!(stylesheet.rules[0].properties[1].name, PropertyName::Margin);
+    assert_eq!(stylesheet.rules[0].properties[1].value, PropertyValue::Length(Length::Px(10)));
+    // .orange
+    // selector
+    assert_eq!(stylesheet.rules[1].selector.tag_name, None);
+    assert_eq!(stylesheet.rules[1].selector.class, Some("orange".to_string()));
+    assert_eq!(stylesheet.rules[1].selector.id, None);
+    // properties
+    assert_eq!(stylesheet.rules[1].properties[0].name, PropertyName::BackgroundColor);
+    assert_eq!(stylesheet.rules[1].properties[0].value, PropertyValue::Color(Color::Named("orange".to_string())));
+    // #blue
+    // selector
+    assert_eq!(stylesheet.rules[2].selector.tag_name, None);
+    assert_eq!(stylesheet.rules[2].selector.class, None);
+    assert_eq!(stylesheet.rules[2].selector.id, Some("blue".to_string()));
+    // properties
+    assert_eq!(stylesheet.rules[2].properties[0].name, PropertyName::BackgroundColor);
+    assert_eq!(stylesheet.rules[2].properties[0].value, PropertyValue::Color(Color::Named("blue".to_string())));
+}
+
 #[test]
-fn test_parse_stylesheet_from_file() {
-    let mut path = env::current_dir().unwrap();
-    path.push("style.css");
-    let mut file_reader = match File::open(&path) {
-        Ok(f) => BufReader::new(f),
-        Err(e) => panic!("file: {}, error: {}", path.display(), e),
-    };
-    let mut css_input = String::new();
-    file_reader.read_to_string(&mut css_input).unwrap();
+fn test_parse_stylesheet() {
+    let css_input = r#"
+body {
+    color: #772233;
+    margin: 10px;
+}
+
+.orange {
+    background-color: orange;
+}
+
+#blue {
+    background-color: blue;
+    }
+    "#;
     let mut parser = CssParser::new(&css_input);
     let stylesheet = parser.parse_stylesheet();
-    for rule in stylesheet.rules {
-        println!("{:?}", rule.selector);
-        for property in rule.properties {
-            println!("{:?}", property);
-        }
-        println!();
-    }
+    assert_stylesheet(&stylesheet);
+    let css_input = r#"
+body {
+    color: #772233;
+    margin: 10px;
+}
+
+.orange {
+    background-color: orange;
+}
+
+#blue {
+    background-color: blue;
+    }"#;
+    let mut parser = CssParser::new(&css_input);
+    let stylesheet = parser.parse_stylesheet();
+    assert_stylesheet(&stylesheet);
+
 }
 
 #[test]

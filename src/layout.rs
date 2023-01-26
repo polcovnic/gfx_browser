@@ -7,8 +7,8 @@ pub struct LayoutBox {
     pub content: Content,
     pub color: Color,
     pub name: String,
-    pub margin: Margin,
-    pub padding: Padding,
+    pub margin: Indentations,
+    pub padding: Indentations,
     pub box_type: BoxType,
     pub children: Vec<LayoutBox>,
 }
@@ -25,12 +25,11 @@ impl fmt::Debug for LayoutBox {
 
 #[derive(Clone)]
 pub enum BoxType {
-    BlockBox,
-    InlineBox,
-    BlockInlineBox,
+    Block,
+    Inline,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Content {
     pub height: i16,
     pub width: i16,
@@ -39,23 +38,15 @@ pub struct Content {
     pub text: Option<String>,
 }
 
-#[derive(Clone)]
-pub struct Margin {
+#[derive(Clone, Default)]
+pub struct Indentations {
     pub top: i16,
     pub right: i16,
     pub bottom: i16,
     pub left: i16,
 }
 
-#[derive(Clone)]
-pub struct Padding {
-    pub top: i16,
-    pub right: i16,
-    pub bottom: i16,
-    pub left: i16,
-}
-
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -74,71 +65,27 @@ impl Default for LayoutBox {
         LayoutBox {
             content: Content::default(),
             color: Color::default(),
-            margin: Margin::default(),
+            margin: Indentations::default(),
             name: String::from("default"),
-            box_type: BoxType::BlockBox,
-            padding: Padding::default(),
+            box_type: BoxType::Block,
+            padding: Indentations::default(),
             children: vec![],
         }
     }
 }
 
-impl Default for Content {
-    fn default() -> Content {
-        Content {
-            x: 100,
-            y: 200,
-            width: 300,
-            height: 300,
-            text: None,
-        }
-    }
-}
-
-impl Default for Color {
-    fn default() -> Color {
-        Color {
-            r: 255,
-            g: 128,
-            b: 64,
-            a: 255,
-        }
-    }
-}
-
-impl Default for Margin {
-    fn default() -> Margin {
-        Margin {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-        }
-    }
-}
-
-impl Default for Padding {
-    fn default() -> Padding {
-        Padding {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-        }
-    }
-}
 
 pub fn build_layout_tree<'a>(node: &'a html::Node) -> Vec<LayoutBox> {
     let mut root = LayoutBox::default();
-    root.box_type = BoxType::BlockBox;
+    root.box_type = BoxType::Block;
     root.color = Color::default();
-    root.margin = Margin::default();
+    root.margin = Indentations::default();
     root.name = if let NodeType::Element(element_data) = &node.node_type {
         element_data.tag_name.clone()
     } else {
         String::from("root")
     };
-    root.padding = Padding::default();
+    root.padding = Indentations::default();
     root.children = build_layout_tree_helper(&node.children, &mut root, 0);
     vec![root]
 }
@@ -149,7 +96,7 @@ pub fn build_layout_tree_helper(nodes: &Vec<html::Node>, parent: &mut LayoutBox,
         match &node.node_type {
             html::NodeType::Element(element) => {
                 let mut box_ = LayoutBox::default();
-                box_.box_type = BoxType::BlockBox;
+                box_.box_type = BoxType::Block;
                 box_.content.x = 100 * count;
                 box_.content.y = 100 * count;
                 box_.name = element.tag_name.clone();
@@ -158,14 +105,14 @@ pub fn build_layout_tree_helper(nodes: &Vec<html::Node>, parent: &mut LayoutBox,
             }
             html::NodeType::Text(text) => {
                 let mut box_ = LayoutBox::default();
-                box_.box_type = BoxType::InlineBox;
+                box_.box_type = BoxType::Inline;
                 box_.content.x = 0;
                 box_.content.y = 0;
                 // box_.content.width = 800;
                 // box_.content.height = 600;
                 box_.color = Color::default();
-                box_.margin = Margin::default();
-                box_.padding = Padding::default();
+                box_.margin = Indentations::default();
+                box_.padding = Indentations::default();
                 box_.children = vec![];
                 boxes.push(box_);
             }

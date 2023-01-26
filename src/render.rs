@@ -142,7 +142,6 @@ pub fn render(boxes: Vec<LayoutBox>) {
             [0.65, 0.16, 0.16, 1.0],
         );
         text.draw(&mut encoder, &data.out).unwrap();
-        sleep(Duration::from_millis(1000));
         encoder.flush(&mut device);
         window.swap_buffers().unwrap();
         device.cleanup();

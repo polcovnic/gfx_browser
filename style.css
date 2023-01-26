@@ -1,4 +1,12 @@
-#body {
-    color: #000;
+body {
+    color: #772233;
     margin: 10px;
+}
+
+.orange {
+    background-color: orange;
+}
+
+#blue {
+    background-color: blue;
 }

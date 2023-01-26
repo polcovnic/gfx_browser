@@ -8,7 +8,7 @@ pub struct Stylesheet {
     pub rules: Vec<Rule>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Rule {
     pub selector: Selector,
     pub properties: Vec<Property>,
@@ -23,14 +23,15 @@ impl Rule {
     }
 }
 
-#[derive(PartialEq, Debug, Default)]
+
+#[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]
 pub struct Property {
     pub name: PropertyName,
     pub value: PropertyValue,
 }
 
 
-#[derive(PartialEq, Debug, Default)]
+#[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]
 pub enum PropertyName {
     #[default]
     Color,
@@ -51,7 +52,7 @@ pub enum PropertyName {
     Other,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash, Default)]
 pub struct Border {
     pub color: Color,
     pub width: Length,
@@ -65,17 +66,8 @@ impl Border {
     }
 }
 
-impl Default for Border {
-    fn default() -> Self {
-        Border {
-            color: Color::default(),
-            width: Length::default(),
-            style: BorderStyle::default(),
-        }
-    }
-}
 
-#[derive(PartialEq, Debug, Default)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
 pub enum BorderStyle {
     #[default]
     Solid,
@@ -90,7 +82,7 @@ pub enum BorderStyle {
     Hidden,
 }
 
-#[derive(PartialEq, Debug, Default)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
 pub enum DisplayType {
     #[default]
     Block,
@@ -99,7 +91,7 @@ pub enum DisplayType {
     None,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash)]
 pub enum PropertyValue {
     Color(Color),
     Length(Length),
@@ -114,7 +106,7 @@ impl Default for PropertyValue {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub enum Color {
     Rgb(u8, u8, u8),
     Named(String),
@@ -128,8 +120,6 @@ impl Default for Color {
 }
 
 
-
-
 impl Debug for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
@@ -141,9 +131,7 @@ impl Debug for Color {
 }
 
 
-
-
-#[derive(PartialEq, Debug, Default)]
+#[derive(PartialEq, Debug, Default, Eq)]
 pub struct Selector {
     pub tag_name: Option<String>,
     pub id: Option<String>,
@@ -161,7 +149,7 @@ impl Selector {
 }
 
 
-#[derive(PartialEq, Debug, Eq)]
+#[derive(PartialEq, Debug, Eq, Clone, Hash)]
 pub enum Length {
     Px(u16),
     Percent(u8),
