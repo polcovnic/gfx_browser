@@ -7,6 +7,6 @@ body {
     background-color: orange;
 }
 
-#blue {
-    background-color: blue;
+#blue{
+    border: 5px solid black;
 }

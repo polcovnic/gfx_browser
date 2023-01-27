@@ -23,7 +23,6 @@ impl Rule {
     }
 }
 
-
 #[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]
 pub struct Property {
     pub name: PropertyName,
@@ -113,6 +112,30 @@ pub enum Color {
     Hex(u32),
 }
 
+impl Color {
+    pub fn get_rgb(&self) -> (u8, u8, u8) {
+        match self {
+            Color::Rgb(r, g, b) => (*r, *g, *b),
+            Color::Named(name) => {
+                match name.as_str() {
+                    "black" => (0, 0, 0),
+                    "white" => (255, 255, 255),
+                    "red" => (255, 0, 0),
+                    "green" => (0, 255, 0),
+                    "blue" => (0, 0, 255),
+                    _ => (0, 0, 0),
+                }
+            }
+            Color::Hex(hex) => {
+                let r = (hex >> 16) & 0xFF;
+                let g = (hex >> 8) & 0xFF;
+                let b = hex & 0xFF;
+                (r as u8, g as u8, b as u8)
+            }
+        }
+    }
+}
+
 impl Default for Color {
     fn default() -> Self {
         Color::Hex(0x000)
@@ -151,10 +174,8 @@ impl Selector {
 
 #[derive(PartialEq, Debug, Eq, Clone, Hash)]
 pub enum Length {
-    Px(u16),
+    Px(i16),
     Percent(u8),
-    Em(u16),
-    Vh(u16),
 }
 
 impl Default for Length {

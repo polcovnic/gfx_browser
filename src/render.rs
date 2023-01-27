@@ -8,8 +8,8 @@ use glutin::GlContext;
 use gfx::Factory;
 
 use crate::layout;
-use crate::html;
-use crate::html::NodeType;
+use crate::dom;
+use crate::dom::NodeType;
 use crate::layout::{Color, Content, LayoutBox};
 
 pub type ColorFormat = gfx::format::Rgba8;
@@ -33,24 +33,24 @@ gfx_defines! {
 }
 
 
-fn transform_rectangle(rect: &Content) -> (f32, f32, f32, f32) {
-    let w = rect.width as f32 / WIDTH as f32;
-    let h = rect.height as f32 / HEIGHT as f32;
-    let x = (rect.x as f32 / WIDTH as f32 * 2.0 - 1.0);
-    let y = -(rect.y as f32 / HEIGHT as f32 * 2.0 - 1.0);
+fn transform_rectangle(box_: &LayoutBox) -> (f32, f32, f32, f32) {
+    let w = box_.content.width as f32 / WIDTH as f32;
+    let h = box_.content.height as f32 / HEIGHT as f32;
+    let x = (box_.x as f32 / WIDTH as f32 * 2.0 - 1.0);
+    let y = -(box_.y as f32 / HEIGHT as f32 * 2.0 - 1.0);
 
     (w, h, x, y)
 }
 
 
-fn render_content(color: &Color, content: &Content) -> Vec<Vertex> {
-    let (w, h, x, y) = transform_rectangle(&content);
-    // println!("w: {}, h: {}, x: {}, y: {}", w, h, x, y);
-    // println!("1: {}, {} \n2: {}, {} \n3: {}, {} \n4: {}, {}", x, y, x, y - h, x + w, y - h, x + w, y);
-    vec![Vertex { pos: [x, y], color: color.to_array() },
-         Vertex { pos: [x, y - h], color: color.to_array() },
-         Vertex { pos: [x + w, y - h], color: color.to_array() },
-         Vertex { pos: [x + w, y], color: color.to_array() }]
+fn render_content(box_: &LayoutBox) -> Vec<Vertex> {
+    let (w, h, x, y) = transform_rectangle(box_);
+    println!("w: {}, h: {}, x: {}, y: {}", w, h, x, y);
+    println!("1: {}, {} \n2: {}, {} \n3: {}, {} \n4: {}, {}", x, y, x, y - h, x + w, y - h, x + w, y);
+    vec![Vertex { pos: [x, y], color: box_.color.to_array() },
+         Vertex { pos: [x, y - h], color: box_.color.to_array() },
+         Vertex { pos: [x + w, y - h], color: box_.color.to_array() },
+         Vertex { pos: [x + w, y], color: box_.color.to_array() }]
 }
 
 pub fn render_rec(box_: &LayoutBox) {
@@ -82,7 +82,7 @@ pub fn render(boxes: Vec<LayoutBox>) {
     let mut vertices = Vec::new();
     let mut index_data = Vec::new();
     for (rect_num, box_) in boxes.iter().enumerate() {
-        let mut v = render_content(&box_.color, &box_.content);
+        let mut v = render_content(box_);
         vertices.append(&mut v);
         let index_base: u16 = rect_num as u16 * 4;
         index_data.append(&mut vec![

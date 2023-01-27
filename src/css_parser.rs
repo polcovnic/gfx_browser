@@ -190,7 +190,7 @@ impl<'a> CssParser<'a> {
             return Length::Percent(value as u8);
         }
         let unit = &value[value.len() - 2..];
-        let value = value[..value.len() - 2].parse::<u16>().unwrap();
+        let value = value[..value.len() - 2].parse::<i16>().unwrap();
         match unit {
             "px" => Length::Px(value),
             "%" => {
@@ -199,8 +199,6 @@ impl<'a> CssParser<'a> {
                 }
                 Length::Percent(value as u8)
             }
-            "em" => Length::Em(value),
-            "vh" => Length::Vh(value),
             _ => Length::Px(value),
         }
     }
@@ -498,12 +496,5 @@ fn test_parse_length() {
     let value = String::from("10%");
     let length = CssParser::parse_length(value);
     assert_eq!(length, Length::Percent(10));
-    // test em
-    let value = String::from("10em");
-    let length = CssParser::parse_length(value);
-    assert_eq!(length, Length::Em(10));
-    // test vh
-    let value = String::from("10vh");
-    let length = CssParser::parse_length(value);
-    assert_eq!(length, Length::Vh(10));
+
 }

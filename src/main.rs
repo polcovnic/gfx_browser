@@ -7,10 +7,10 @@ extern crate gfx_text;
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, Read};
-use crate::html::pretty_print;
+use crate::dom::pretty_print;
 use crate::html_parser::HtmlParser;
 
-mod html;
+mod dom;
 mod html_parser;
 mod layout;
 mod render;
@@ -57,5 +57,5 @@ fn main() {
     let boxes = layout::build_layout_tree(&nodes[0]);
     println!("{:?}", boxes);
     pretty_print(&nodes[0], 0);
-    // render(boxes);
+    render(boxes);
 }

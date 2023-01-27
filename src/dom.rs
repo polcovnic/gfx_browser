@@ -174,6 +174,4 @@ body {
     assert_eq!(node.styles.len(), 2);
     assert_eq!(node.children[0].styles.len(), 1);
     assert_eq!(node.children[1].styles.len(), 1);
-
-
 }
