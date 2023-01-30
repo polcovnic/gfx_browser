@@ -34,7 +34,8 @@ fn main() {
     let mut html_input = String::new();
     file_reader.read_to_string(&mut html_input).unwrap();
     let mut parser = HtmlParser::new(&html_input);
-    let mut nodes = parser.parse_nodes();
+    let nodes = parser.parse_nodes();
+    let mut body = nodes[0].children[1].clone();
 
     // css
     path.push("../style.css");
@@ -46,16 +47,10 @@ fn main() {
     file_reader.read_to_string(&mut css_input).unwrap();
     let mut parser = CssParser::new(&css_input);
     let stylesheet = parser.parse_stylesheet();
-    for rule in &stylesheet.rules {
-        println!("{:?}", rule.selector);
-        for property in &rule.properties {
-            println!("{:?}", property);
-        }
-        println!();
+    body.add_styles(&stylesheet);
+    let boxes = layout::LayoutBox::build_layout_tree(&body);
+    for box_ in &boxes {
+        println!("Box {:?}", box_);
     }
-    nodes[0].add_styles(&stylesheet);
-    let boxes = layout::build_layout_tree(&nodes[0]);
-    println!("{:?}", boxes);
-    pretty_print(&nodes[0], 0);
     render(boxes);
 }

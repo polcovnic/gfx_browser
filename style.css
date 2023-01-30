@@ -4,9 +4,11 @@ body {
 }
 
 .orange {
-    background-color: orange;
+    background-color: #552244;
+    padding: 20px;
 }
 
 #blue{
-    border: 5px solid black;
+    background-color: #223355;
+    padding: 20px;
 }
