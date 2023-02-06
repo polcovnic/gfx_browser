@@ -25,7 +25,7 @@ pub struct LayoutBox {
 }
 
 
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Default, PartialEq, Debug)]
 pub struct Dimensions {
     pub x: i16,
     pub y: i16,
@@ -114,6 +114,7 @@ impl Default for LayoutBox {
 impl LayoutBox {
     pub fn build_layout_tree(node: &dom::Node) -> Vec<LayoutBox> {
         let mut body = LayoutBox::default();
+        body.dimensions.width = crate::render::WIDTH as i16;
         body.box_type = BoxType::Block;
         body.name = if let NodeType::Element(element_data) = &node.node_type {
             element_data.tag_name.clone()
@@ -212,7 +213,29 @@ impl LayoutBox {
                         };
                     }
                 }
-                s => { println!("{:?}", s) }
+                PropertyName::Width => {
+                    match &style.value {
+                        PropertyValue::Length(Length::Px(px)) => {
+                            box_.dimensions.width = *px;
+                        }
+                        PropertyValue::Length(Length::Percent(percent)) => {
+                            box_.dimensions.width = parent.dimensions.width * (*percent as i16 / 100);
+                        }
+                        _ => { panic!("Width must be a length") }
+                    }
+                }
+                PropertyName::Height => {
+                    match &style.value {
+                        PropertyValue::Length(Length::Px(px)) => {
+                            box_.dimensions.height = *px;
+                        }
+                        PropertyValue::Length(Length::Percent(percent)) => {
+                            box_.dimensions.height = parent.dimensions.height * *percent as i16;
+                        }
+                        _ => { panic!("Height must be a length") }
+                    }
+                }
+                s => { println!("kurwa{:?}", s) }
             }
         }
         box_.name = element_data.tag_name.clone();
@@ -224,10 +247,8 @@ impl LayoutBox {
 
 
     fn calculate_position(&mut self, parent: &mut LayoutBox, element_size: usize) {
-        self.content.width = 10;
-        self.content.height = 10;
         self.dimensions.height = self.padding.top + self.content.height + self.padding.bottom;
-        self.dimensions.width = self.padding.left + self.content.width + self.padding.right;
+        // self.dimensions.width = self.padding.left + self.content.width + self.padding.right;
 
         self.dimensions.y = parent.v_elements + parent.dimensions.y;
         self.dimensions.x = parent.dimensions.x;
@@ -237,10 +258,12 @@ impl LayoutBox {
         //         self.actual_dimensions.y = before.margin.bottom + self.dimensions.y + self.margin.top;
         //     }
         // }
-        self.actual_dimensions.x = self.dimensions.x + self.margin.left;
-        self.actual_dimensions.y = self.dimensions.y + self.margin.top;
-        self.actual_dimensions.width = self.dimensions.width;
+        self.actual_dimensions.x = self.dimensions.x + self.margin.left + parent.padding.left;
+        self.actual_dimensions.y = self.dimensions.y + self.margin.top + parent.padding.top;
+        self.actual_dimensions.width = self.dimensions.width - self.margin.left - self.margin.right;
         self.actual_dimensions.height = self.dimensions.height;
+
+        println!("{}: {:?}", self.name, self.dimensions);
 
         parent.v_elements += self.dimensions.height;
     }
@@ -323,7 +346,7 @@ fn test_build_layout_tree() {
 
     let body = &boxes[0];
     let blue = &boxes[1];
-    let orange1 =  &boxes[3];
+    let orange1 = &boxes[3];
 
 
     let mut parser = HtmlParser::new(html2);
@@ -334,15 +357,10 @@ fn test_build_layout_tree() {
     let boxes = crate::render::layout_box_tree_to_vector(boxes[0].clone());
     let orange2 = &boxes[2];
 
-    println!("{:?}", orange1);
-    println!("{:?}", orange2);
     assert_eq!(orange1, orange2);
 
 
-
-
     // assert_eq!(boxes.len(), 6);
-    // assert_eq!(body.name, "body");
     // assert_eq!(blue.name, "div");
     // assert_eq!(blue.actual_dimensions.x, 10);
     // assert_eq!(blue.actual_dimensions.y, 10);
@@ -368,4 +386,75 @@ fn test_build_layout_tree() {
     // assert_eq!(orange1.padding.right, 20);
     // assert_eq!(orange1.content.width, 10);
 }
+
+#[test]
+fn test_calculate_position() {
+    let html = r#"<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css"></link>
+    <title>Example</title>
+</head>
+
+<body>
+<div id="blue">ddgsd</div>
+<div class="orange"></div>
+<div class="green">dfssdf</div>
+
+</body>
+
+</html>"#;
+
+    let css = r#"body {
+    color: #772233;
+    margin: 10px;
+}
+
+.orange {
+    background-color: #b46c2b;
+    padding: 10px;
+    width: 20px;
+    margin: 1px;
+}
+
+#blue{
+    background-color: #093183;
+    padding: 20px;
+    margin: 10px;
+}
+
+.black {
+    background-color: #000000;
+    padding: 20px;
+    margin: 30px;
+}
+
+.green {
+    background-color: #2ebe1a;
+    padding: 20px;
+    margin: 10px;
+}
+
+.txt {
+    background-color: #ffffff;
+    font-size: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+}"#;
+    let mut parser = HtmlParser::new(html);
+    let nodes = parser.parse_nodes();
+    let mut body = nodes[0].children[1].clone();
+    let mut parser = CssParser::new(&css);
+    let stylesheet = parser.parse_stylesheet();
+    body.add_styles(&stylesheet);
+    let boxes = LayoutBox::build_layout_tree(&body);
+    let boxes = crate::render::layout_box_tree_to_vector(boxes[0].clone());
+    let blue = &boxes[1];
+    let orange = &boxes[3];
+    let green = &boxes[4];
+
+    assert_eq!(blue.dimensions.width, crate::render::WIDTH as i16);
+    assert_eq!(orange.dimensions.width, crate::render::WIDTH as i16);
+    assert_eq!(green.dimensions.width, crate::render::WIDTH as i16);
+}
+
 

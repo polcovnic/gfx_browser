@@ -29,6 +29,15 @@ pub struct Property {
     pub value: PropertyValue,
 }
 
+impl Property {
+    pub fn new(name: PropertyName, value: PropertyValue) -> Property {
+        Property {
+            name,
+            value,
+        }
+    }
+}
+
 
 #[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]
 pub enum PropertyName {

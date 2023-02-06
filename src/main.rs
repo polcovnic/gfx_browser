@@ -49,8 +49,5 @@ fn main() {
     let stylesheet = parser.parse_stylesheet();
     body.add_styles(&stylesheet);
     let boxes = layout::LayoutBox::build_layout_tree(&body);
-    for box_ in &boxes {
-        println!("Box {:?}", box_);
-    }
     render(boxes);
 }

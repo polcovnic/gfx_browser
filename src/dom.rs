@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
-use crate::css::Property;
+use crate::css::{Length, Property, PropertyName, PropertyValue};
 use crate::{CssParser, Stylesheet};
 
 #[derive(PartialEq, Eq, Clone)]
@@ -54,7 +54,13 @@ impl Node {
         }
     }
 
+    pub fn set_default_styles(&mut self) {
+        self.styles.insert(Property::new(PropertyName::Width,
+                                         PropertyValue::Length(Length::Percent(100))));
+    }
+
     pub fn add_styles(&mut self, stylesheet: &Stylesheet) {
+        self.set_default_styles();
         match self.node_type {
             NodeType::Element(ref element) => {
                 for rule in &stylesheet.rules {
@@ -74,6 +80,7 @@ impl Node {
                         if let Some(selector_class) = &rule.selector.class {
                             if *selector_class == class {
                                 self.styles.extend(rule.properties.clone());
+                                println!("Found class: {}", class);
                             }
                         }
                     }
