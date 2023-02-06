@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::default::Default;
 use std::fmt::{Debug, Formatter};
+use std::hash::Hash;
 use std::iter::Map;
 
 #[derive(Debug, Default)]
@@ -11,11 +13,11 @@ pub struct Stylesheet {
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Rule {
     pub selector: Selector,
-    pub properties: Vec<Property>,
+    pub properties: HashMap<PropertyName, PropertyValue>,
 }
 
 impl Rule {
-    pub fn new(name: Selector, properties: Vec<Property>) -> Rule {
+    pub fn new(name: Selector, properties: HashMap<PropertyName, PropertyValue>) -> Rule {
         Rule {
             selector: name,
             properties,
@@ -23,20 +25,6 @@ impl Rule {
     }
 }
 
-#[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]
-pub struct Property {
-    pub name: PropertyName,
-    pub value: PropertyValue,
-}
-
-impl Property {
-    pub fn new(name: PropertyName, value: PropertyValue) -> Property {
-        Property {
-            name,
-            value,
-        }
-    }
-}
 
 
 #[derive(PartialEq, Debug, Default, Clone, Eq, Hash)]

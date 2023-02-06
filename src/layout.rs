@@ -157,22 +157,22 @@ impl LayoutBox {
 
     fn build_box(element: &dom::Node, parent: &mut LayoutBox, element_data: &ElementData, element_number: usize) -> LayoutBox {
         let mut box_ = LayoutBox::default();
-        for style in &element.styles {
-            match &style.name {
+        for (name, value) in &element.styles {
+            match &name {
                 PropertyName::Color => {
-                    if let PropertyValue::Color(color) = &style.value {
+                    if let PropertyValue::Color(color) = &value {
                         let color = color.get_rgb();
                         box_.color = Color::new(color.0, color.1, color.2, 255);
                     }
                 }
                 PropertyName::BackgroundColor => {
-                    if let PropertyValue::Color(color) = &style.value {
+                    if let PropertyValue::Color(color) = &value {
                         let color = color.get_rgb();
                         box_.background_color = Color::new(color.0, color.1, color.2, 255);
                     }
                 }
                 PropertyName::Margin => {
-                    if let PropertyValue::Length(Length::Px(px)) = &style.value {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
                         box_.margin = Indentations {
                             top: *px,
                             right: *px,
@@ -182,7 +182,7 @@ impl LayoutBox {
                     }
                 }
                 PropertyName::Padding => {
-                    if let PropertyValue::Length(Length::Px(px)) = &style.value {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
                         box_.padding = Indentations {
                             top: *px,
                             right: *px,
@@ -192,7 +192,7 @@ impl LayoutBox {
                     }
                 }
                 PropertyName::Border => {
-                    if let PropertyValue::Border(border) = &style.value {
+                    if let PropertyValue::Border(border) = &value {
                         if let Length::Px(px) = border.width {
                             let color = border.color.get_rgb();
                             let color = Color::new(color.0, color.1, color.1, 255);
@@ -205,7 +205,7 @@ impl LayoutBox {
                     }
                 }
                 PropertyName::Display => {
-                    if let PropertyValue::Display(display) = &style.value {
+                    if let PropertyValue::Display(display) = &value {
                         box_.box_type = match display {
                             css::DisplayType::Block => BoxType::Block,
                             css::DisplayType::Inline => BoxType::Inline,
@@ -214,7 +214,7 @@ impl LayoutBox {
                     }
                 }
                 PropertyName::Width => {
-                    match &style.value {
+                    match &value {
                         PropertyValue::Length(Length::Px(px)) => {
                             box_.dimensions.width = *px;
                         }
@@ -225,7 +225,7 @@ impl LayoutBox {
                     }
                 }
                 PropertyName::Height => {
-                    match &style.value {
+                    match &value {
                         PropertyValue::Length(Length::Px(px)) => {
                             box_.dimensions.height = *px;
                         }

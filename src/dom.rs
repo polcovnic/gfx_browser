@@ -1,13 +1,13 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
-use crate::css::{Length, Property, PropertyName, PropertyValue};
+use crate::css::{Length, PropertyName, PropertyValue};
 use crate::{CssParser, Stylesheet};
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct Node {
     pub children: Vec<Node>,
     pub node_type: NodeType,
-    pub styles: HashSet<Property>,
+    pub styles: HashMap<PropertyName, PropertyValue>,
 }
 
 #[derive(PartialEq, Eq, Clone)]
@@ -50,13 +50,12 @@ impl Node {
         Node {
             node_type,
             children,
-            styles: HashSet::new(),
+            styles: HashMap::new(),
         }
     }
 
     pub fn set_default_styles(&mut self) {
-        self.styles.insert(Property::new(PropertyName::Width,
-                                         PropertyValue::Length(Length::Percent(100))));
+        self.styles.insert(PropertyName::Width, PropertyValue::Length(Length::Percent(100)));
     }
 
     pub fn add_styles(&mut self, stylesheet: &Stylesheet) {
