@@ -86,16 +86,7 @@ pub fn render(boxes: Vec<LayoutBox>) {
     let mut vertices = Vec::new();
     let mut index_data = Vec::new();
     let mut text_vec = Vec::new();
-    let mut rect_num = 0;
-    for box_ in boxes.iter() {
-        if let Some(text) = &box_.content{
-            text_vec.push((
-                text.as_str(),
-                [box_.actual_dimensions.x as i32, box_.actual_dimensions.y as i32],
-                box_.color.to_array())
-            );
-
-        } else {
+    for (rect_num, box_) in boxes.iter().enumerate() {
             let mut v = render_content(box_);
             vertices.append(&mut v);
             let index_base: u16 = rect_num as u16 * 4;
@@ -107,7 +98,12 @@ pub fn render(boxes: Vec<LayoutBox>) {
                 index_base + 3,
                 index_base,
             ]);
-            rect_num += 1;
+            if let Some(content) = &box_.content{
+                text_vec.push((
+                    &content.text,
+                    [content.x as i32, content.y as i32],
+                    box_.color.to_array())
+                );
         }
 
     }

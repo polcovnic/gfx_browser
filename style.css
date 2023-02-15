@@ -1,21 +1,19 @@
 #blue {
     background-color: #093183;
     padding: 20px;
-    margin: 10px;
 }
 
 .orange {
     background-color: #b46c2b;
     padding: 10px;
     width: 400px;
-    margin: 1px;
     color: #2ebe1a;
+    margin-bottom: 10px;
 }
 
 .green {
     background-color: #2ebe1a;
     padding: 80px;
-    margin: 10px;
 }
 
 .black {
