@@ -116,53 +116,10 @@ impl<'a> CssParser<'a> {
             "height" => (PropertyName::Height, PropertyValue::Length(CssParser::parse_length(value))),
             "background-color" => (PropertyName::BackgroundColor, PropertyValue::Color(CssParser::parse_color(value))),
             "display" => (PropertyName::Display, PropertyValue::Display(CssParser::parse_display(value))),
-            "border" => (PropertyName::Border, PropertyValue::Border(CssParser::parse_border(value))),
-            "border-width" => {
-                let border = Border {
-                    width: CssParser::parse_length(value),
-                    ..Default::default()
-                };
-                (PropertyName::BorderWidth, PropertyValue::Border(border))
-            },
-            "border-style" => {
-                let border = Border {
-                    style: CssParser::parse_border_style(value),
-                    ..Default::default()
-                };
-                (PropertyName::BorderStyle, PropertyValue::Border(border))
-            },
-            "border-color" => (PropertyName::BorderColor, PropertyValue::Color(CssParser::parse_color(value))),
             _ => (PropertyName::Other, PropertyValue::Other(value)),
         }
     }
 
-    fn parse_border(value: String) -> Border {
-        let mut border = Border::default();
-        let mut border_parts = value.split_whitespace();
-        let border_width = border_parts.next().unwrap();
-        let border_style = border_parts.next().unwrap();
-        let border_color = border_parts.next().unwrap();
-        border.width = CssParser::parse_length(border_width.to_string());
-        border.style = CssParser::parse_border_style(border_style.to_string());
-        border.color = CssParser::parse_color(border_color.to_string());
-        border
-    }
-
-    fn parse_border_style(value: String) -> BorderStyle {
-        match value.as_str() {
-            "solid" => BorderStyle::Solid,
-            "dotted" => BorderStyle::Dotted,
-            "dashed" => BorderStyle::Dashed,
-            "double" => BorderStyle::Double,
-            "groove" => BorderStyle::Groove,
-            "ridge" => BorderStyle::Ridge,
-            "inset" => BorderStyle::Inset,
-            "outset" => BorderStyle::Outset,
-            "none" => BorderStyle::None,
-            "hidden" => BorderStyle::Hidden,
-            _ => BorderStyle::None,
-        }
-    }
 
     fn parse_display(value: String) -> DisplayType {
         match value.as_str() {
@@ -436,42 +393,6 @@ fn test_process_property_members_background_color() {
     );
 }
 
-#[test]
-fn test_process_property_members_border() {
-    let border_key = String::from("border");
-    let border_value = String::from("1px solid red");
-    let (name, value) =
-        CssParser::process_property_members(border_key, border_value);
-    assert_eq!(name, PropertyName::Border);
-    assert_eq!(
-        value,
-        PropertyValue::Border(Border {
-            width: Length::Px(1),
-            style: BorderStyle::Solid,
-            color: Color::Named("red".to_string()),
-        })
-    );
-    let border_key = String::from("border-width");
-    let border_value = String::from("1px");
-    let (name, value) =
-        CssParser::process_property_members(border_key, border_value);
-    assert_eq!(name, PropertyName::BorderWidth);
-    assert_eq!(value, PropertyValue::Border(Border {
-        width: Length::Px(1),
-        style: BorderStyle::default(),
-        color: Color::default(),
-    }));
-    let border_key = String::from("border-style");
-    let border_value = String::from("solid");
-    let (name, value) =
-        CssParser::process_property_members(border_key, border_value);
-    assert_eq!(name, PropertyName::BorderStyle);
-    assert_eq!(value, PropertyValue::Border(Border {
-        color: Color::default(),
-        width: Length::default(),
-        style: BorderStyle::Solid,
-    }));
-}
 
 #[test]
 fn test_parse_color() {

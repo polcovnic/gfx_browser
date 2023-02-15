@@ -80,6 +80,7 @@ pub fn layout_box_tree_to_vector(boxes_tree: LayoutBox) -> Vec<LayoutBox> {
 }
 
 
+
 pub fn render(boxes: Vec<LayoutBox>) {
     let boxes = layout_box_tree_to_vector(boxes[0].clone());
     let mut vertices = Vec::new();
@@ -87,10 +88,10 @@ pub fn render(boxes: Vec<LayoutBox>) {
     let mut text_vec = Vec::new();
     let mut rect_num = 0;
     for box_ in boxes.iter() {
-        if let Some(text) = &box_.content.text{
+        if let Some(text) = &box_.content{
             text_vec.push((
                 text.as_str(),
-                [10 + box_.actual_dimensions.x as i32, 10 + box_.actual_dimensions.y as i32],
+                [box_.actual_dimensions.x as i32, box_.actual_dimensions.y as i32],
                 box_.color.to_array())
             );
 

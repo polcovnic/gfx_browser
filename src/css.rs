@@ -32,51 +32,14 @@ pub enum PropertyName {
     #[default]
     Color,
     BackgroundColor,
-    BackgroundImage,
     Width,
     Height,
     Margin,
     Padding,
     Display,
-    Border,
-    BorderColor,
-    BorderWidth,
-    BorderStyle,
-    FontSize,
-    FontFamily,
-    FontWeight,
     Other,
 }
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash, Default)]
-pub struct Border {
-    pub color: Color,
-    pub width: Length,
-    pub style: BorderStyle,
-}
-
-impl Border {
-    pub fn with_width(&mut self, width: Length) -> &mut Self {
-        self.width = width;
-        self
-    }
-}
-
-
-#[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
-pub enum BorderStyle {
-    #[default]
-    Solid,
-    Dotted,
-    Dashed,
-    Double,
-    Groove,
-    Ridge,
-    Inset,
-    Outset,
-    None,
-    Hidden,
-}
 
 #[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
 pub enum DisplayType {
@@ -91,7 +54,6 @@ pub enum DisplayType {
 pub enum PropertyValue {
     Color(Color),
     Length(Length),
-    Border(Border),
     Display(DisplayType),
     Other(String),
 }

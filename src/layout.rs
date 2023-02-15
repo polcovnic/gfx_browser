@@ -12,13 +12,12 @@ pub struct LayoutBox {
     pub dimensions: Dimensions,
     pub actual_dimensions: Dimensions,
     // for rendering
-    pub content: Content,
+    pub content: Option<String>,
     pub color: Color,
     pub background_color: Color,
     pub name: String,
     pub margin: Indentations,
     pub padding: Indentations,
-    pub border: Border,
     pub box_type: BoxType,
     pub children: Vec<LayoutBox>,
     v_elements: i16,
@@ -65,13 +64,6 @@ pub struct Indentations {
     pub left: i16,
 }
 
-#[derive(Clone, Default, PartialEq)]
-pub struct Border {
-    pub width: i16,
-    pub color: Color,
-    pub style: css::BorderStyle,
-}
-
 
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct Color {
@@ -95,14 +87,13 @@ impl Color {
 impl Default for LayoutBox {
     fn default() -> LayoutBox {
         LayoutBox {
-            content: Content::default(),
+            content: None,
             dimensions: Dimensions::default(),
             actual_dimensions: Dimensions::default(),
             color: Color::new(0, 0, 0, 255),
             margin: Indentations::default(),
             background_color: Color::new(0, 0, 0, 255),
             name: String::from("default"),
-            border: Border::default(),
             box_type: BoxType::Block,
             padding: Indentations::default(),
             children: vec![],
@@ -137,7 +128,7 @@ impl LayoutBox {
                     boxes.push(box_);
                 }
                 NodeType::Text(text) => {
-                    let text_box = LayoutBox::build_text_layout_box(node, parent, text.clone(), element_number);
+                    let text_box = LayoutBox::add_content(node, parent, text.clone(), element_number);
                     boxes.push(text_box);
                 }
                 _ => {}
@@ -146,12 +137,20 @@ impl LayoutBox {
         boxes
     }
 
-    fn build_text_layout_box(node: &dom::Node, parent: &mut LayoutBox, text: String, element_number: usize) -> LayoutBox {
+    fn add_content(element: &dom::Node, parent: &mut LayoutBox, text: String, element_number: usize) -> LayoutBox {
         let mut text_box = LayoutBox::default();
         text_box.name = String::from("text");
-        text_box.color = Color::new(0, 0, 0, 255);
-        text_box.content.text = Some(text);
+        for (name, value) in &element.styles {
+            if name == &PropertyName::Color {
+                if let PropertyValue::Color(color) = &value {
+                    let color = color.get_rgb();
+                    text_box.color = Color::new(color.0, color.1, color.2, 255);
+                }
+            }
+        }
+        text_box.content = Some(text);
         text_box.calculate_position(parent, element_number);
+        text_box.calculate_actual_dimensions(parent);
         text_box
     }
 
@@ -191,19 +190,6 @@ impl LayoutBox {
                         };
                     }
                 }
-                PropertyName::Border => {
-                    if let PropertyValue::Border(border) = &value {
-                        if let Length::Px(px) = border.width {
-                            let color = border.color.get_rgb();
-                            let color = Color::new(color.0, color.1, color.1, 255);
-                            box_.border = Border {
-                                width: px,
-                                color,
-                                style: border.style.clone(),
-                            };
-                        }
-                    }
-                }
                 PropertyName::Display => {
                     if let PropertyValue::Display(display) = &value {
                         box_.box_type = match display {
@@ -239,33 +225,35 @@ impl LayoutBox {
             }
         }
         box_.name = element_data.tag_name.clone();
-        box_.box_type = BoxType::Block;
         box_.calculate_position(parent, element_number);
+        box_.calculate_actual_dimensions(parent);
 
         box_
     }
 
 
     fn calculate_position(&mut self, parent: &mut LayoutBox, element_size: usize) {
-        self.dimensions.height = self.padding.top + self.content.height + self.padding.bottom;
-        // self.dimensions.width = self.padding.left + self.content.width + self.padding.right;
+        self.dimensions.height = self.padding.top + self.padding.bottom;
+        // if self.content.is_some() {
+        //     parent.dimensions.height += 10;
+        // }
 
         self.dimensions.y = parent.v_elements + parent.dimensions.y;
         self.dimensions.x = parent.dimensions.x;
 
-        // if element_size != 0 {
-        //     if let Some(before) = parent.children.get(element_size - 1) {
-        //         self.actual_dimensions.y = before.margin.bottom + self.dimensions.y + self.margin.top;
-        //     }
-        // }
+        if element_size != 0 {
+            if let Some(before) = parent.children.get(element_size - 1) {
+                self.actual_dimensions.y = before.margin.bottom + self.dimensions.y + self.margin.top;
+            }
+        }
+
+        parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom;
+    }
+    fn calculate_actual_dimensions(&mut self, parent: &mut LayoutBox) {
         self.actual_dimensions.x = self.dimensions.x + self.margin.left + parent.padding.left;
         self.actual_dimensions.y = self.dimensions.y + self.margin.top + parent.padding.top;
         self.actual_dimensions.width = self.dimensions.width - self.margin.left - self.margin.right;
         self.actual_dimensions.height = self.dimensions.height;
-
-        println!("{}: {:?}", self.name, self.dimensions);
-
-        parent.v_elements += self.dimensions.height;
     }
 }
 
