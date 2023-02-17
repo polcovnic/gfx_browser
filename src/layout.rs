@@ -228,21 +228,13 @@ impl LayoutBox {
 
     fn calculate_position(&mut self, parent: &mut LayoutBox, element_size: usize) {
         self.dimensions.height = self.padding.top + self.padding.bottom;
-        // if self.content.is_some() {
-        //     parent.dimensions.height += 10;
-        // }
 
         self.dimensions.y = parent.v_elements + parent.dimensions.y;
         self.dimensions.x = parent.dimensions.x;
 
-        if element_size != 0 {
-            if let Some(before) = parent.children.get(element_size - 1) {
-                self.actual_dimensions.y = before.margin.bottom + self.dimensions.y + self.margin.top;
-            }
-        }
-        // 20 is fixed text size
-        parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom + 20;
+        parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom;
     }
+
     fn calculate_actual_dimensions(&mut self, parent: &mut LayoutBox) {
         self.actual_dimensions.x = self.dimensions.x + self.margin.left + parent.padding.left;
         self.actual_dimensions.y = self.dimensions.y + self.margin.top + parent.padding.top;
