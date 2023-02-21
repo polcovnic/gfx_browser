@@ -35,7 +35,15 @@ pub enum PropertyName {
     Width,
     Height,
     Margin,
+    MarginTop,
+    MarginBottom,
+    MarginLeft,
+    MarginRight,
     Padding,
+    PaddingTop,
+    PaddingBottom,
+    PaddingLeft,
+    PaddingRight,
     Display,
     Other,
 }
@@ -98,7 +106,7 @@ impl Color {
 
 impl Default for Color {
     fn default() -> Self {
-        Color::Hex(0x000)
+        Color::Hex(0xffffff)
     }
 }
 

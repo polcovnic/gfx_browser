@@ -110,11 +110,19 @@ impl<'a> CssParser<'a> {
     fn process_property_members(name: String, value: String) -> (PropertyName, PropertyValue) {
         match name.as_str() {
             "color" => (PropertyName::Color, PropertyValue::Color(CssParser::parse_color(value))),
+            "background-color" => (PropertyName::BackgroundColor, PropertyValue::Color(CssParser::parse_color(value))),
             "margin" => (PropertyName::Margin, PropertyValue::Length(CssParser::parse_length(value))),
+            "margin-top" => (PropertyName::MarginTop, PropertyValue::Length(CssParser::parse_length(value))),
+            "margin-bottom" => (PropertyName::MarginBottom, PropertyValue::Length(CssParser::parse_length(value))),
+            "margin-left" => (PropertyName::MarginLeft, PropertyValue::Length(CssParser::parse_length(value))),
+            "margin-right" => (PropertyName::MarginRight, PropertyValue::Length(CssParser::parse_length(value))),
             "padding" => (PropertyName::Padding, PropertyValue::Length(CssParser::parse_length(value))),
+            "padding-top" => (PropertyName::PaddingTop, PropertyValue::Length(CssParser::parse_length(value))),
+            "padding-bottom" => (PropertyName::PaddingBottom, PropertyValue::Length(CssParser::parse_length(value))),
+            "padding-left" => (PropertyName::PaddingLeft, PropertyValue::Length(CssParser::parse_length(value))),
+            "padding-right" => (PropertyName::PaddingRight, PropertyValue::Length(CssParser::parse_length(value))),
             "width" => (PropertyName::Width, PropertyValue::Length(CssParser::parse_length(value))),
             "height" => (PropertyName::Height, PropertyValue::Length(CssParser::parse_length(value))),
-            "background-color" => (PropertyName::BackgroundColor, PropertyValue::Color(CssParser::parse_color(value))),
             "display" => (PropertyName::Display, PropertyValue::Display(CssParser::parse_display(value))),
             _ => (PropertyName::Other, PropertyValue::Other(value)),
         }

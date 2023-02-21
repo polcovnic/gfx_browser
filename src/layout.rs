@@ -21,6 +21,7 @@ pub struct LayoutBox {
     pub box_type: BoxType,
     pub children: Vec<LayoutBox>,
     v_elements: i16,
+    h_elements: i16,
 }
 
 
@@ -94,28 +95,51 @@ impl Default for LayoutBox {
             actual_dimensions: Dimensions::default(),
             color: Color::new(0, 0, 0, 255),
             margin: Indentations::default(),
-            background_color: Color::new(0, 0, 0, 255),
+            background_color: Color::new(255, 255, 255, 255),
             name: String::from("default"),
             box_type: BoxType::Block,
             padding: Indentations::default(),
             children: vec![],
             v_elements: 0,
+            h_elements: 0,
         }
     }
 }
 
 impl LayoutBox {
     pub fn build_layout_tree(node: &dom::Node) -> Vec<LayoutBox> {
-        let mut body = LayoutBox::default();
-        body.dimensions.width = crate::render::WIDTH as i16;
-        body.box_type = BoxType::Block;
+        let mut base = LayoutBox::default();
+        base.dimensions.width = crate::render::WIDTH as i16;
+        base.actual_dimensions.width = crate::render::WIDTH as i16;
+        let mut body = LayoutBox::build_box(node, &mut base,
+                                        &ElementData::default(), 0);
         body.name = if let NodeType::Element(element_data) = &node.node_type {
             element_data.tag_name.clone()
         } else {
             panic!("Root node must be an element");
         };
         body.children = LayoutBox::build_layout_tree_helper(&node.children, &mut body, 0);
+        body.expand_blocks_that_have_text();
         vec![body]
+    }
+
+    pub fn expand_blocks_that_have_text(&mut self) {
+        LayoutBox::expand_blocks_that_have_text_rec(self);
+    }
+
+    fn expand_blocks_that_have_text_rec(parent: &mut LayoutBox) {
+        let mut count: i16 = 0;
+        for i in 0..parent.children.len() {
+            if parent.children[i].content.is_some() {
+                parent.children[i].content.as_mut().unwrap().y += 20 * count;
+                count += 1;
+            }
+            if i < parent.children.len() - 1 {
+                parent.children[i + 1].actual_dimensions.y += 20 * count;
+            }
+            parent.actual_dimensions.height += parent.children[i].actual_dimensions.height;
+            LayoutBox::expand_blocks_that_have_text_rec(&mut parent.children[i]);
+        }
     }
 
 
@@ -130,7 +154,7 @@ impl LayoutBox {
                     boxes.push(box_);
                 }
                 NodeType::Text(text) => {
-                    parent.set_content(&text);
+                    parent.set_content(text);
                 }
                 _ => {}
             }
@@ -141,19 +165,19 @@ impl LayoutBox {
     fn build_box(element: &dom::Node, parent: &mut LayoutBox, element_data: &ElementData, element_number: usize) -> LayoutBox {
         let mut box_ = LayoutBox::default();
         for (name, value) in &element.styles {
-            match &name {
+            match name {
                 PropertyName::Color => {
                     if let PropertyValue::Color(color) = &value {
                         let color = color.get_rgb();
                         box_.color = Color::new(color.0, color.1, color.2, 255);
                     }
-                }
+                },
                 PropertyName::BackgroundColor => {
                     if let PropertyValue::Color(color) = &value {
                         let color = color.get_rgb();
                         box_.background_color = Color::new(color.0, color.1, color.2, 255);
                     }
-                }
+                },
                 PropertyName::Margin => {
                     if let PropertyValue::Length(Length::Px(px)) = &value {
                         box_.margin = Indentations {
@@ -163,7 +187,27 @@ impl LayoutBox {
                             left: *px,
                         };
                     }
-                }
+                },
+                PropertyName::MarginTop => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.margin.top = *px;
+                    }
+                },
+                PropertyName::MarginRight => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.margin.right = *px;
+                    }
+                },
+                PropertyName::MarginBottom => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.margin.bottom = *px;
+                    }
+                },
+                PropertyName::MarginLeft => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.margin.left = *px;
+                    }
+                },
                 PropertyName::Padding => {
                     if let PropertyValue::Length(Length::Px(px)) = &value {
                         box_.padding = Indentations {
@@ -173,7 +217,27 @@ impl LayoutBox {
                             left: *px,
                         };
                     }
-                }
+                },
+                PropertyName::PaddingTop => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.padding.top = *px;
+                    }
+                },
+                PropertyName::PaddingRight => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.padding.right = *px;
+                    }
+                },
+                PropertyName::PaddingBottom => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.padding.bottom = *px;
+                    }
+                },
+                PropertyName::PaddingLeft => {
+                    if let PropertyValue::Length(Length::Px(px)) = &value {
+                        box_.padding.left = *px;
+                    }
+                },
                 PropertyName::Display => {
                     if let PropertyValue::Display(display) = &value {
                         box_.box_type = match display {
@@ -182,36 +246,35 @@ impl LayoutBox {
                             _ => BoxType::Block,
                         };
                     }
-                }
+                },
                 PropertyName::Width => {
                     match &value {
                         PropertyValue::Length(Length::Px(px)) => {
                             box_.dimensions.width = *px;
                         }
                         PropertyValue::Length(Length::Percent(percent)) => {
-                            box_.dimensions.width = parent.dimensions.width * (*percent as i16 / 100);
+                            box_.dimensions.width = parent.actual_dimensions.width * (*percent as i16 / 100);
                         }
                         _ => { panic!("Width must be a length") }
                     }
-                }
+                },
                 PropertyName::Height => {
                     match &value {
                         PropertyValue::Length(Length::Px(px)) => {
                             box_.dimensions.height = *px;
-                        }
+                        },
                         PropertyValue::Length(Length::Percent(percent)) => {
                             box_.dimensions.height = parent.dimensions.height * *percent as i16;
-                        }
+                        },
                         _ => { panic!("Height must be a length") }
                     }
-                }
-                s => { println!("kurwa{:?}", s) }
+                },
+                _s => { println!("kurwa{:?}", value) },
             }
         }
         box_.name = element_data.tag_name.clone();
         box_.calculate_position(parent, element_number);
         box_.calculate_actual_dimensions(parent);
-
         box_
     }
 
@@ -221,24 +284,28 @@ impl LayoutBox {
         content.y = self.actual_dimensions.y + self.padding.top;
         content.text = str.clone();
         self.actual_dimensions.height += 20;
-        self.actual_dimensions.width += 20;
         self.content = Some(content);
     }
 
 
     fn calculate_position(&mut self, parent: &mut LayoutBox, element_size: usize) {
-        self.dimensions.height = self.padding.top + self.padding.bottom;
-
-        self.dimensions.y = parent.v_elements + parent.dimensions.y;
-        self.dimensions.x = parent.dimensions.x;
-
-        parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom;
+        self.dimensions.height += self.padding.top + self.padding.bottom;
+        if self.box_type == BoxType::Block {
+            self.dimensions.y = parent.v_elements + parent.actual_dimensions.y;
+            self.dimensions.x = parent.actual_dimensions.x;
+            parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom;
+        } else if self.box_type == BoxType::Inline {
+            self.dimensions.y = parent.actual_dimensions.y;
+            self.dimensions.x = parent.h_elements + parent.actual_dimensions.x;
+            parent.h_elements += self.dimensions.width + self.margin.left + self.margin.right;
+        }
     }
 
     fn calculate_actual_dimensions(&mut self, parent: &mut LayoutBox) {
         self.actual_dimensions.x = self.dimensions.x + self.margin.left + parent.padding.left;
         self.actual_dimensions.y = self.dimensions.y + self.margin.top + parent.padding.top;
-        self.actual_dimensions.width = self.dimensions.width - self.margin.left - self.margin.right;
+        self.actual_dimensions.width = self.dimensions.width - self.margin.left - self.margin.right
+            - parent.padding.right * 2;
         self.actual_dimensions.height = self.dimensions.height;
     }
 }

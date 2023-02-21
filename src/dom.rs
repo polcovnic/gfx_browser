@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
-use crate::css::{Length, PropertyName, PropertyValue};
+use crate::css::{DisplayType, Length, PropertyName, PropertyValue};
 use crate::{CssParser, Stylesheet};
 
 #[derive(PartialEq, Eq, Clone)]
@@ -17,7 +17,7 @@ pub enum NodeType {
     Comment(String),
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Default)]
 pub struct ElementData {
     pub tag_name: String,
     pub attributes: AttrMap,
@@ -56,6 +56,9 @@ impl Node {
 
     fn set_default_styles(&mut self) {
         self.styles.insert(PropertyName::Width, PropertyValue::Length(Length::Percent(100)));
+        if let NodeType::Text(_s) = &self.node_type {
+            self.styles.insert(PropertyName::Display, PropertyValue::Display(DisplayType::Inline));
+        }
     }
 
     fn inherit_styles(&mut self, parent_styles: &HashMap<PropertyName, PropertyValue>) {

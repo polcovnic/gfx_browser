@@ -1,3 +1,6 @@
+.body {
+    padding: 20px;
+}
 #blue {
     background-color: #093183;
     padding: 20px;
@@ -7,23 +10,12 @@
     background-color: #b46c2b;
     padding: 10px;
     width: 400px;
+    height: 50px;
     color: #2ebe1a;
-    margin-bottom: 10px;
+    margin-left: 20px;
 }
 
 .green {
     background-color: #2ebe1a;
     padding: 80px;
-}
-
-.black {
-    background-color: #000000;
-    padding: 20px;
-    margin: 30px;
-}
-
-.txt {
-    background-color: #ffffff;
-    font-size: 20px;
-    font-family: Arial, Helvetica, sans-serif;
 }

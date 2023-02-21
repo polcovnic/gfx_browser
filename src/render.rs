@@ -63,26 +63,18 @@ pub fn render_rec(box_: &LayoutBox) {
     }
 }
 
-fn layout_box_tree_to_vector_helper(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
+fn layout_box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
     let mut boxes_out = Vec::new();
     for node in boxes_tree {
         boxes_out.push(node.clone());
-        boxes_out.append(&mut layout_box_tree_to_vector_helper(node.children));
+        boxes_out.append(&mut layout_box_tree_to_vector(node.children));
     }
     boxes_out
 }
 
-pub fn layout_box_tree_to_vector(boxes_tree: LayoutBox) -> Vec<LayoutBox> {
-    let mut boxes = Vec::new();
-    boxes.push(boxes_tree.clone());
-    boxes.append(&mut layout_box_tree_to_vector_helper(boxes_tree.children));
-    boxes
-}
-
-
 
 pub fn render(boxes: Vec<LayoutBox>) {
-    let boxes = layout_box_tree_to_vector(boxes[0].clone());
+    let boxes = layout_box_tree_to_vector(boxes);
     let mut vertices = Vec::new();
     let mut index_data = Vec::new();
     let mut text_vec = Vec::new();

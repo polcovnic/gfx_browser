@@ -4,10 +4,11 @@ extern crate gfx_window_glutin;
 extern crate glutin;
 extern crate gfx_text;
 
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, Read};
-use crate::dom::pretty_print;
+use crate::dom::{ElementData, Node, NodeType, pretty_print};
 use crate::html_parser::HtmlParser;
 
 mod dom;
