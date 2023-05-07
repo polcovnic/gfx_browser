@@ -48,6 +48,29 @@ pub enum PropertyName {
     Other,
 }
 
+impl PropertyName {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            PropertyName::Color => "color",
+            PropertyName::BackgroundColor => "backgroundColor",
+            PropertyName::Width => "width",
+            PropertyName::Height => "height",
+            PropertyName::Margin => "margin",
+            PropertyName::MarginTop => "marginTop",
+            PropertyName::MarginBottom => "marginBottom",
+            PropertyName::MarginLeft => "marginLeft",
+            PropertyName::MarginRight => "marginRight",
+            PropertyName::Padding => "padding",
+            PropertyName::PaddingTop => "paddingTop",
+            PropertyName::PaddingBottom => "paddingBottom",
+            PropertyName::PaddingLeft => "paddingLeft",
+            PropertyName::PaddingRight => "paddingRight",
+            PropertyName::Display => "display",
+            PropertyName::Other => "other",
+        }
+    }
+}
+
 
 #[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
 pub enum DisplayType {
@@ -65,6 +88,18 @@ pub enum PropertyValue {
     Display(DisplayType),
     Other(String),
 }
+
+impl PropertyValue {
+   pub fn to_str(&self) -> String {
+        match self {
+            PropertyValue::Color(color) => color.get_rgb_str(),
+            PropertyValue::Length(length) => length.to_str(),
+            PropertyValue::Display(_display) => String::from("Display"),
+            PropertyValue::Other(other) => other.to_string()
+        }
+    }
+}
+
 
 impl Default for PropertyValue {
     fn default() -> Self {
@@ -101,6 +136,11 @@ impl Color {
                 (r as u8, g as u8, b as u8)
             }
         }
+    }
+
+    pub fn get_rgb_str(&self) -> String {
+        let (r, g, b) = self.get_rgb();
+        format!("rdb({}, {}, {})", r, g, b)
     }
 }
 
@@ -144,6 +184,16 @@ impl Selector {
 pub enum Length {
     Px(i16),
     Percent(u8),
+}
+
+impl Length {
+    fn to_str(&self) -> String {
+        match self {
+            Length::Px(px) => format!("{}px", px),
+            Length::Percent(pr) => format!("{}%", pr),
+        }
+
+    }
 }
 
 impl Default for Length {

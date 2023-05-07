@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use crate::css::{DisplayType, Length, PropertyName, PropertyValue};
 use crate::{CssParser, Stylesheet};
+use crate::js;
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct Node {
@@ -108,6 +109,10 @@ impl Node {
     pub fn add_styles(&mut self, stylesheet: &Stylesheet) {
         let styles = HashMap::new();
         self.add_styles_rec(stylesheet, &styles);
+    }
+
+    pub fn add_js(&mut self, js: &str) {
+        js::init(js, self);
     }
 }
 

@@ -63,7 +63,7 @@ pub fn render_rec(box_: &LayoutBox) {
     }
 }
 
-fn layout_box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
+pub fn layout_box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
     let mut boxes_out = Vec::new();
     for node in boxes_tree {
         boxes_out.push(node.clone());
