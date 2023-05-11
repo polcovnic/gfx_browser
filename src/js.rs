@@ -2,11 +2,14 @@ use std::collections::HashMap;
 use v8;
 use std::fs;
 use std::io::Read;
+use std::thread;
+use std::time::Duration;
 use crate::css::{PropertyName, PropertyValue};
 use crate::css::PropertyValue::Color;
 use crate::dom::{Node, NodeType};
 
 use crate::NODES;
+
 
 fn log_callback(
     scope: &mut v8::HandleScope,
@@ -69,11 +72,11 @@ use v8::{FunctionCallback, FunctionCallbackArguments, ReturnValue};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-fn add_document_old(scope: &mut v8::ContextScope<v8::HandleScope>, nodes: Vec<&Node>) {
+fn add_document_old<'a>(scope: &'a mut v8::ContextScope<v8::HandleScope>, nodes: &'a Vec<&'a Node>) -> v8::Local<'a, v8::Object> {
+    // let nodes_rc = Rc::new(RefCell::new(nodes));
+
     let document_key = v8::String::new(scope, "document").unwrap().into();
     let document_obj = v8::Object::new(scope);
-
-    // let nodes_rc = Rc::new(RefCell::new(nodes));
 
     for node in nodes {
         if let NodeType::Element(elem) = &node.node_type {
@@ -97,6 +100,7 @@ fn add_document_old(scope: &mut v8::ContextScope<v8::HandleScope>, nodes: Vec<&N
     }
 
     scope.get_current_context().global(scope).set(scope, document_key, document_obj.into());
+    document_obj
 }
 
 fn add_document(scope: &mut v8::HandleScope) {
@@ -154,21 +158,20 @@ pub fn init(js: &str, node: &Node) {
     scope.get_current_context().global(&mut scope).set(&mut scope, console_key, console_obj.into());
 
 
-
-    let mut file = fs::File::open("index.js").expect("Unable to open the file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).expect("Unable to read the file");
-
     let nodes = nodes_tree_to_vector(node);
     // add document
-    add_document_old(&mut scope, nodes);
 
-    // compile script
-    let code = v8::String::new(&mut scope, &contents).unwrap();
+    let document_obj = add_document_old(&mut scope, &nodes);
+
+    let code = v8::String::new(&mut scope, &js).unwrap();
     let script = v8::Script::compile(&mut scope, code, None).unwrap();
 
     // run script
-    let _result = script.run(&mut scope).unwrap();
+
+    let result = script.run(&mut scope).unwrap();
+    let result = result.to_string(&mut scope).unwrap();
+    println!("result: {}", result.to_rust_string_lossy(& mut scope));
+
 }
 
 

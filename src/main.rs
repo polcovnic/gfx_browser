@@ -18,12 +18,14 @@ mod render;
 mod css_parser;
 mod css;
 mod js;
+mod browser;
 
 use render::render;
 use css_parser::CssParser;
 use crate::css::Stylesheet;
 
 use std::sync::Mutex;
+use crate::browser::Browser;
 
 pub static mut NODES: Vec<Node> = Vec::new();
 
@@ -38,37 +40,9 @@ fn main() {
     };
     let mut html_input = String::new();
     file_reader.read_to_string(&mut html_input).unwrap();
-    let mut parser = HtmlParser::new(&html_input);
-    let nodes = parser.parse_nodes();
-    // {
-    //     let mut nodes_guard = NODES.lock().unwrap();
-    //     *nodes_guard = nodes.clone();
-    // }
-    let mut body = nodes[0].children[1].clone();
-
-    unsafe {
-        NODES = nodes;
-    }
-
-    // css
-    path.push("../style.css");
-    let mut file_reader = match File::open(&path) {
-        Ok(f) => BufReader::new(f),
-        Err(e) => panic!("file: {}, error: {}", path.display(), e),
-    };
-    let mut css_input = String::new();
-    file_reader.read_to_string(&mut css_input).unwrap();
-    let mut parser = CssParser::new(&css_input);
-    let stylesheet = parser.parse_stylesheet();
-    body.add_styles(&stylesheet);
-    path.push("../index.js");
-    let mut file_reader = match File::open(&path) {
-        Ok(f) => BufReader::new(f),
-        Err(e) => panic!("file: {}, error: {}", path.display(), e),
-    };
-    let mut js_input = String::new();
-    file_reader.read_to_string(&mut js_input).unwrap();
-    body.add_js(&js_input);
-    let boxes = layout::LayoutBox::build_layout_tree(&body);
-    render(boxes);
+    let mut browser = Browser::new(html_input);
+    browser.run();
 }
+
+// 1 father element
+// 2 js function or object

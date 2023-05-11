@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::fmt;
+use std::{fmt, panic};
 use crate::css::{DisplayType, Length, PropertyName, PropertyValue};
 use crate::{CssParser, Stylesheet};
 use crate::js;
@@ -112,7 +112,12 @@ impl Node {
     }
 
     pub fn add_js(&mut self, js: &str) {
-        js::init(js, self);
+        let result = panic::catch_unwind(|| {
+            js::init(js, &self);
+        });
+        if result.is_err() {
+            println!("Error in JS: {}", js);
+        }
     }
 }
 
