@@ -55,14 +55,6 @@ fn render_content(box_: &LayoutBox) -> Vec<Vertex> {
          Vertex { pos: [x + w, y], color: box_.background_color.to_array() }]
 }
 
-pub fn render_rec(box_: &LayoutBox) {
-    if box_.children.len() != 0 {
-        for child in &box_.children {
-            render_rec(child);
-        }
-    }
-}
-
 pub fn layout_box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
     let mut boxes_out = Vec::new();
     for node in boxes_tree {
@@ -73,7 +65,7 @@ pub fn layout_box_tree_to_vector(boxes_tree: Vec<LayoutBox>) -> Vec<LayoutBox> {
 }
 
 
-pub fn render(boxes: Vec<LayoutBox>) {
+pub fn render(boxes: Vec<LayoutBox>, title: &String) {
     let boxes = layout_box_tree_to_vector(boxes);
     let mut vertices = Vec::new();
     let mut index_data = Vec::new();
@@ -100,7 +92,7 @@ pub fn render(boxes: Vec<LayoutBox>) {
 
     }
     let builder = glutin::WindowBuilder::new()
-        .with_title(String::from("Browser"))
+        .with_title(title)
         .with_dimensions(WIDTH, HEIGHT)
         .with_vsync();
 

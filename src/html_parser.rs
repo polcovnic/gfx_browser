@@ -316,6 +316,9 @@ fn test_parse_comment_node() {
     let mut parser = HtmlParser::new("--test-->");
     let node = parser.parse_comment_node();
     assert_eq!(node.node_type, NodeType::Comment(String::from("test")));
+    let mut parser = HtmlParser::new("--test-->");
+    let node = parser.parse_comment_node();
+    assert_eq!(node.node_type, NodeType::Comment(String::from("test")));
 }
 
 #[test]

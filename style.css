@@ -1,11 +1,8 @@
 body {
-    background-color: #0a1652;
-    padding: 10px;
+    background-color: #ff2222;
+    padding: 30px;
 }
-.main {
-    padding: 10px;
-    background-color: red;
-}
+
 #blue {
     background-color: #3a74f6;
     padding: 10px;

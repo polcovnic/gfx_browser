@@ -119,15 +119,12 @@ impl LayoutBox {
             panic!("Root node must be an element");
         };
         body.children = LayoutBox::build_layout_tree_helper(&node.children, &mut body, 0);
-        body.expand_blocks_that_have_text();
+        LayoutBox::expand_blocks_that_have_text(&mut body);
         vec![body]
     }
 
-    pub fn expand_blocks_that_have_text(&mut self) {
-        LayoutBox::expand_blocks_that_have_text_rec(self);
-    }
 
-    fn expand_blocks_that_have_text_rec(parent: &mut LayoutBox) {
+    fn expand_blocks_that_have_text(parent: &mut LayoutBox) {
         let mut count: i16 = 0;
         for i in 0..parent.children.len() {
             if parent.children[i].content.is_some() {
@@ -138,7 +135,7 @@ impl LayoutBox {
                 parent.children[i + 1].actual_dimensions.y += 20 * count;
             }
             parent.actual_dimensions.height += parent.children[i].actual_dimensions.height;
-            LayoutBox::expand_blocks_that_have_text_rec(&mut parent.children[i]);
+            LayoutBox::expand_blocks_that_have_text(&mut parent.children[i]);
         }
     }
 
@@ -159,7 +156,6 @@ impl LayoutBox {
                 _ => {}
             }
         }
-        LayoutBox::expand_parent_elements(&mut boxes);
         boxes
     }
 
@@ -289,13 +285,13 @@ impl LayoutBox {
     }
 
 
-    fn calculate_position(&mut self, parent: &mut LayoutBox, element_size: usize) {
+    fn calculate_position(&mut self, parent: &mut LayoutBox, _element_size: usize) {
         self.dimensions.height += self.padding.top + self.padding.bottom;
-        if self.box_type == BoxType::Block {
+        if parent.box_type == BoxType::Block {
             self.dimensions.y = parent.v_elements + parent.actual_dimensions.y;
             self.dimensions.x = parent.actual_dimensions.x;
             parent.v_elements += self.dimensions.height + self.margin.top + self.margin.bottom;
-        } else if self.box_type == BoxType::Inline {
+        } else if parent.box_type == BoxType::Inline {
             self.dimensions.y = parent.actual_dimensions.y;
             self.dimensions.x = parent.h_elements + parent.actual_dimensions.x;
             parent.h_elements += self.dimensions.width + self.margin.left + self.margin.right;
@@ -312,20 +308,7 @@ impl LayoutBox {
     }
 
 
-    fn expand_parent_elements_rec(box_: &mut LayoutBox) {
-        for child in box_.children.iter_mut() {
-            box_.actual_dimensions.height += child.actual_dimensions.height;
-            LayoutBox::expand_parent_elements_rec(child);
-        }
-    }
 
-    fn expand_parent_elements(boxes: &mut Vec<LayoutBox>) {
-        for box_ in boxes.iter_mut() {
-            if box_.box_type == BoxType::Block {
-                // LayoutBox::expand_parent_elements_rec(box_);
-            }
-        }
-    }
 }
 
 

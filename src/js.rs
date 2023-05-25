@@ -1,20 +1,10 @@
-use std::collections::HashMap;
-use v8;
-use std::fs;
-use std::io::Read;
-use std::thread;
-use std::time::Duration;
-use crate::css::{PropertyName, PropertyValue};
-use crate::css::PropertyValue::Color;
+use crate::browser::NODES;
 use crate::dom::{Node, NodeType};
-
-use crate::NODES;
-
 
 fn log_callback(
     scope: &mut v8::HandleScope,
     args: v8::FunctionCallbackArguments,
-    mut rv: v8::ReturnValue,
+    mut _rv: v8::ReturnValue,
 ) {
     let message = args
         .get(0)
@@ -32,11 +22,8 @@ fn get_by_id_callback(
     let arg = args.get(0);
     if let Some(id) = arg.to_string(scope) {
         let id_str = id.to_rust_string_lossy(scope);
-        // let nodes = NODES.lock().unwrap(); // Отримуємо доступ до спільного ресурсу
-        let nodes;
-        unsafe {
-            nodes = nodes_tree_to_vector(&NODES[0]);
-        }
+        let nodes = unsafe {&NODES};
+        let nodes = nodes_tree_to_vector(&nodes[0]);
         for node in nodes {
             if let NodeType::Element(element_data) = &node.node_type {
                 if let Some(node_id) = element_data.attributes.get("id") {
@@ -47,11 +34,11 @@ fn get_by_id_callback(
                         element_obj.set(scope, tag_name_key, tag_name_value.into());
                         let style_key = v8::String::new(scope, "style").unwrap().into();
                         let style_obj = v8::Object::new(scope);
-                        println!("{:?}", node);
                         for (key, value) in &node.styles {
-                            let key_str = dbg!(format!("{:?}", key));
+                            dbg!(key, value);
+                            let key_str = format!("{:?}", key);
                             let key = v8::String::new(scope, key_str.as_str()).unwrap().into();
-                            let value_str = dbg!(format!("{:?}", value));
+                            let value_str = format!("{:?}", value);
                             let value = v8::String::new(scope, value_str.as_str()).unwrap();
                             style_obj.set(scope, key, value.into());
                         }
@@ -66,16 +53,8 @@ fn get_by_id_callback(
 }
 
 
-use v8::{FunctionCallback, FunctionCallbackArguments, ReturnValue};
-
-
-use std::cell::RefCell;
-use std::rc::Rc;
-
-fn add_document_old<'a>(scope: &'a mut v8::ContextScope<v8::HandleScope>, nodes: &'a Vec<&'a Node>) -> v8::Local<'a, v8::Object> {
-    // let nodes_rc = Rc::new(RefCell::new(nodes));
-
-    let document_key = v8::String::new(scope, "document").unwrap().into();
+fn add_document_structure<'a>(scope: &'a mut v8::ContextScope<v8::HandleScope>, nodes: &'a Vec<&'a Node>) -> v8::Local<'a, v8::Object> {
+    let global = scope.get_current_context().global(scope);
     let document_obj = v8::Object::new(scope);
 
     for node in nodes {
@@ -87,7 +66,6 @@ fn add_document_old<'a>(scope: &'a mut v8::ContextScope<v8::HandleScope>, nodes:
             let style_obj = v8::Object::new(scope);
 
             for (property_name, property_value) in &node.styles {
-                println!("Node: {:?}, {:?} {:?}", elem.tag_name, property_name.to_str(), property_value);
                 let property_name_key = v8::String::new(scope, property_name.to_str()).unwrap().into();
                 let property_value_key = v8::String::new(scope, property_value.to_str().as_str()).unwrap();
                 style_obj.set(scope, property_name_key, property_value_key.into());
@@ -98,7 +76,16 @@ fn add_document_old<'a>(scope: &'a mut v8::ContextScope<v8::HandleScope>, nodes:
             document_obj.set(scope, tag_key, tag_obj.into());
         }
     }
+    let get_by_id_fn_template = v8::FunctionTemplate::new(scope, get_by_id_callback);
+    let get_by_id_fn = get_by_id_fn_template.get_function(scope).unwrap();
 
+    // Add the get_by_id_callback function to the document object
+    let get_by_id_key = v8::String::new(scope, "getElementById").unwrap().into();
+    document_obj.set(scope, get_by_id_key, get_by_id_fn.into());
+
+    // Add the document object to the global object
+    let document_key = v8::String::new(scope, "document").unwrap().into();
+    global.set(scope, document_key, document_obj.into());
     scope.get_current_context().global(scope).set(scope, document_key, document_obj.into());
     document_obj
 }
@@ -123,7 +110,7 @@ fn add_document(scope: &mut v8::HandleScope) {
 }
 
 
-fn nodes_tree_to_vector(node: &Node) -> Vec<&Node>{
+pub fn nodes_tree_to_vector(node: &Node) -> Vec<&Node>{
     let mut nodes_out = vec![];
     if let NodeType::Element(_) = node.node_type {
         nodes_out.push(node);
@@ -140,7 +127,7 @@ pub fn init(js: &str, node: &Node) {
     v8::V8::initialize_platform(platform.into());
     v8::V8::initialize();
 
-    // add isolete and context
+    // add isolate and context
     let isolate = &mut v8::Isolate::new(Default::default());
     let scope = &mut v8::HandleScope::new(isolate);
     let global = v8::ObjectTemplate::new(scope);
@@ -161,16 +148,14 @@ pub fn init(js: &str, node: &Node) {
     let nodes = nodes_tree_to_vector(node);
     // add document
 
-    let document_obj = add_document_old(&mut scope, &nodes);
+    add_document_structure(&mut scope, &nodes);
 
     let code = v8::String::new(&mut scope, &js).unwrap();
     let script = v8::Script::compile(&mut scope, code, None).unwrap();
 
     // run script
 
-    let result = script.run(&mut scope).unwrap();
-    let result = result.to_string(&mut scope).unwrap();
-    println!("result: {}", result.to_rust_string_lossy(& mut scope));
+    let _result = script.run(&mut scope).unwrap();
 
 }
 

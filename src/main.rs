@@ -27,7 +27,6 @@ use crate::css::Stylesheet;
 use std::sync::Mutex;
 use crate::browser::Browser;
 
-pub static mut NODES: Vec<Node> = Vec::new();
 
 fn main() {
     // path to files

@@ -9,6 +9,7 @@ use crate::html_parser::HtmlParser;
 use crate::layout;
 use crate::render::render;
 
+pub static mut NODES: Vec<Node> = Vec::new();
 pub struct Browser {
     html: String,
     stylesheet: Stylesheet,
@@ -63,12 +64,16 @@ impl Browser {
         }
         let mut body = nodes[0].children[1].clone();
         body.add_styles(&self.stylesheet);
-        println!("js: {}", self.js);
+        // for js read
+        let body_for_js = body.clone();
+        unsafe {
+            NODES = vec![body_for_js];
+        }
         if !self.js.is_empty() {
             body.add_js(self.js.clone().as_str());
         }
         let boxes = layout::LayoutBox::build_layout_tree(&body);
-        render(boxes);
+        render(boxes, &self.title);
     }
     fn parse_css(&mut self, css_path: &str) {
         let mut path = env::current_dir().unwrap();
@@ -87,7 +92,6 @@ impl Browser {
         };
         let mut js = String::new();
         file_reader.read_to_string(&mut js).unwrap();
-        println!("js_script: {}", self.js);
         self.js += js.as_str();
     }
 }
